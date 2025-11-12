@@ -2,33 +2,47 @@
 // Dependencies: openssl و curl مفعلين في PHP
 
 function getServiceAccountJson() {
-    // نجيب القيم من متغيرات البيئة
     $clientEmail = getenv('FIREBASE_CLIENT_EMAIL');
     $privateKey  = getenv('FIREBASE_PRIVATE_KEY');
 
     if (!$clientEmail || !$privateKey) {
-        throw new Exception("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY in environment variables.");
+        throw new Exception("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
     }
 
-    // نعيد بناء الشكل المتوقع لـ Service Account (زي ما الكود كان بيستخدمه)
-    $privateKey = str_replace('\\n', "\n", $privateKey); // تحويل \n إلى أسطر حقيقية
+    // الخطوة الأهم: تنظيف الـ private key بدقة
     $privateKey = trim($privateKey);
 
-    // نتأكد من وجود BEGIN/END لو مش موجودين
-    if (!str_contains($privateKey, '-----BEGIN PRIVATE KEY-----')) {
-        $privateKey = "-----BEGIN PRIVATE KEY-----\n" . $privateKey;
+    // استبدال جميع أشكال \n بسطر جديد حقيقي
+    $privateKey = str_replace('\\n', "\n", $privateKey); // من JSON escaped
+    $privateKey = str_replace('\n', "\n", $privateKey);  // من نسخ يدوي
+    $privateKey = str_replace('\\\\n', "\n", $privateKey); // أحيانًا يتحول لـ \\n
+
+    // تقسيم السطر لسطور وتنظيف كل سطر
+    $lines = explode("\n", $privateKey);
+    $cleanLines = [];
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line !== '') {
+            $cleanLines[] = $line;
+        }
     }
-    if (!str_contains($privateKey, '-----END PRIVATE KEY-----')) {
-        $privateKey .= "\n-----END PRIVATE KEY-----";
+    $privateKey = implode("\n", $cleanLines);
+
+    // التأكد من BEGIN و END
+    if (strpos($privateKey, '-----BEGIN PRIVATE KEY-----') === false) {
+        array_unshift($cleanLines, '-----BEGIN PRIVATE KEY-----');
     }
+    if (strpos($privateKey, '-----END PRIVATE KEY-----') === false) {
+        $cleanLines[] = '-----END PRIVATE KEY-----';
+    }
+    $privateKey = implode("\n", $cleanLines);
 
     return [
         'client_email' => $clientEmail,
         'private_key'  => $privateKey,
-        'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0' // اختياري
+        'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0'
     ];
 }
-
 
 function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
@@ -60,17 +74,9 @@ function getAccessTokenFromServiceAccount() {
     $jwtClaim = $base64UrlEncode(json_encode($claimSet));
     $unsignedJwt = $jwtHeader . '.' . $jwtClaim;
 
-    // ✅ تصحيح تنسيق الـ private key
     $privateKey = $sa['private_key'];
-    $privateKey = str_replace(['\\n', '\n'], "\n", $privateKey); // تحويل \n إلى سطر جديد
-    $privateKey = trim($privateKey); // إزالة المسافات الزائدة
-
-    // ✅ التأكد من وجود BEGIN/END
-    if (!str_contains($privateKey, '-----BEGIN PRIVATE KEY-----')) {
-        $privateKey = "-----BEGIN PRIVATE KEY-----\n" . $privateKey . "\n-----END PRIVATE KEY-----";
-    }
-
     $signature = '';
+    file_put_contents('/tmp/debug_key.txt', $privateKey);
     if (!openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
         throw new Exception('Failed to sign JWT');
     }
@@ -112,6 +118,14 @@ function getAccessTokenFromServiceAccount() {
 
 
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
+
+
+    try {
+  $token = getAccessTokenFromServiceAccount();
+  echo "✅ Access token generated successfully!";
+} catch (Exception $e) {
+  echo "❌ " . $e->getMessage();
+}
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
