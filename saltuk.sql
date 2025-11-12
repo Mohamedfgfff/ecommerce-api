@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 11, 2025 at 09:05 PM
+-- Generation Time: Nov 12, 2025 at 11:04 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `addresses`
 --
 
+DROP TABLE IF EXISTS `addresses`;
 CREATE TABLE `addresses` (
   `address_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -57,6 +58,7 @@ INSERT INTO `addresses` (`address_id`, `user_id`, `address_title`, `city`, `stre
 -- Table structure for table `admins`
 --
 
+DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
   `admin_id` int(11) NOT NULL,
   `admin_name` varchar(100) NOT NULL,
@@ -72,6 +74,7 @@ CREATE TABLE `admins` (
 -- Table structure for table `cart`
 --
 
+DROP TABLE IF EXISTS `cart`;
 CREATE TABLE `cart` (
   `cart_id` int(11) NOT NULL,
   `cart_user_id` int(11) NOT NULL,
@@ -90,6 +93,7 @@ CREATE TABLE `cart` (
 -- Table structure for table `chats`
 --
 
+DROP TABLE IF EXISTS `chats`;
 CREATE TABLE `chats` (
   `id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
@@ -118,6 +122,7 @@ INSERT INTO `chats` (`id`, `user_id`, `admin_id`, `platform`, `reference_id`, `l
 -- Table structure for table `coupons`
 --
 
+DROP TABLE IF EXISTS `coupons`;
 CREATE TABLE `coupons` (
   `coupon_id` int(11) NOT NULL,
   `coupon_name` varchar(100) NOT NULL,
@@ -132,6 +137,7 @@ CREATE TABLE `coupons` (
 -- Table structure for table `favorites`
 --
 
+DROP TABLE IF EXISTS `favorites`;
 CREATE TABLE `favorites` (
   `favorite_id` int(11) NOT NULL,
   `favorite_user_id` int(11) NOT NULL,
@@ -169,6 +175,7 @@ INSERT INTO `favorites` (`favorite_id`, `favorite_user_id`, `favorite_product_id
 -- Table structure for table `messages`
 --
 
+DROP TABLE IF EXISTS `messages`;
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL,
   `chat_id` int(11) DEFAULT NULL,
@@ -208,6 +215,7 @@ INSERT INTO `messages` (`id`, `chat_id`, `user_id`, `admin_id`, `platform`, `sen
 -- Table structure for table `notifications`
 --
 
+DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL,
   `target_user_id` int(11) DEFAULT NULL,
@@ -226,6 +234,7 @@ CREATE TABLE `notifications` (
 -- Table structure for table `search_cash`
 --
 
+DROP TABLE IF EXISTS `search_cash`;
 CREATE TABLE `search_cash` (
   `id` int(11) NOT NULL,
   `query` varchar(255) NOT NULL,
@@ -256,6 +265,7 @@ INSERT INTO `search_cash` (`id`, `query`, `platform`, `data`, `created_at`, `exp
 -- Table structure for table `users`
 --
 
+DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `user_name` varchar(100) NOT NULL,
