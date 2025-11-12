@@ -24,10 +24,10 @@ if ($count > 0) {
     );
 
     insertData("users", $data);
-   // sendEmail($email,"verify Code Ecommerce","verify Code $verifycode");
+   sendEmail($email,"verify Code Ecommerce","verify Code $verifycode");
 
 
-   sendEmaildepage($verifycode,$email,$username);
+//    sendEmaildepage($verifycode,$email,$username);
 
    
 }

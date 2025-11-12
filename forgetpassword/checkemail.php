@@ -14,8 +14,8 @@ if ($count > 0) {
     $data=array("user_verifycode"=>$verifycode);
 
     updateData("users",$data,"user_email='$email'");
-  // sendEmail($email,"verify Code Ecommerce","verify Code $verifycode");
-   sendEmaildepage($verifycode,$email,$email);
+  sendEmail($email,"verify Code Ecommerce","verify Code $verifycode");
+//    sendEmaildepage($verifycode,$email,$email);
   
 } else {
     echo json_encode(array("status" => "fail"));

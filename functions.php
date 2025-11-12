@@ -168,75 +168,75 @@ function sendEmail($to,$title,$body){
 mail($to, $title, $body, $header);
 }
 
-function sendEmaildepage($verifycode,$email,$username){
-    $apiKey = "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";
+// function sendEmaildepage($verifycode,$email,$username){
+//     // $apiKey = "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";
+// $apiKey = $_ENV['SENDINBLUE_API_KEY'] ?? '';
+//     $postData = array(
+//         "sender" => array("name" => "Ecommerce App", "email" => "mh6285436@gmail.com"),
+//         "to" => array(
+//             array("email" => $email, "name" => $username)
+//         ),
+//         "subject" => "Verify Code Ecommerce",
+//         "htmlContent" => "<p>Welcome $username,</p><p>Your verification code is: <b>$verifycode</b></p>"
+//     );
 
-    $postData = array(
-        "sender" => array("name" => "Ecommerce App", "email" => "mh6285436@gmail.com"),
-        "to" => array(
-            array("email" => $email, "name" => $username)
-        ),
-        "subject" => "Verify Code Ecommerce",
-        "htmlContent" => "<p>Welcome $username,</p><p>Your verification code is: <b>$verifycode</b></p>"
-    );
+//     $ch = curl_init();
+//     curl_setopt($ch, CURLOPT_URL, "https://api.sendinblue.com/v3/smtp/email");
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+//         "accept: application/json",
+//         "content-type: application/json",
+//         "api-key: $apiKey"
+//     ));
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "https://api.sendinblue.com/v3/smtp/email");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-        "accept: application/json",
-        "content-type: application/json",
-        "api-key: $apiKey"
-    ));
-
-    $response = curl_exec($ch);
-    curl_close($ch);
+//     $response = curl_exec($ch);
+//     curl_close($ch);
    
-}
+// }
 
 
-function sendGCM($title, $message, $topic, $pageid, $pagename)
-{
+// function sendGCM($title, $message, $topic, $pageid, $pagename)
+// {
 
 
-    $url = 'https://fcm.googleapis.com/fcm/send';
+//     $url = 'https://fcm.googleapis.com/fcm/send';
 
-    $fields = array(
-        "to" => '/topics/' . $topic,
-        'priority' => 'high',
-        'content_available' => true,
+//     $fields = array(
+//         "to" => '/topics/' . $topic,
+//         'priority' => 'high',
+//         'content_available' => true,
 
-        'notification' => array(
-            "body" =>  $message,
-            "title" =>  $title,
-            "click_action" => "FLUTTER_NOTIFICATION_CLICK",
-            "sound" => "default"
+//         'notification' => array(
+//             "body" =>  $message,
+//             "title" =>  $title,
+//             "click_action" => "FLUTTER_NOTIFICATION_CLICK",
+//             "sound" => "default"
 
-        ),
-        'data' => array(
-            "pageid" => $pageid,
-            "pagename" => $pagename
-        )
+//         ),
+//         'data' => array(
+//             "pageid" => $pageid,
+//             "pagename" => $pagename
+//         )
 
-    );
+//     );
 
 
-    $fields = json_encode($fields);
-    $headers = array(
-        'Authorization: key=' . "",
-        'Content-Type: application/json'
-    );
+//     $fields = json_encode($fields);
+//     $headers = array(
+//         'Authorization: key=' . "",
+//         'Content-Type: application/json'
+//     );
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+//     $ch = curl_init();
+//     curl_setopt($ch, CURLOPT_URL, $url);
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
 
-    $result = curl_exec($ch);
-    return $result;
-    curl_close($ch);
-}
+//     $result = curl_exec($ch);
+//     return $result;
+//     curl_close($ch);
+// }
