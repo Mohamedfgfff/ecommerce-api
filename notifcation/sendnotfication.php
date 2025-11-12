@@ -29,13 +29,13 @@ function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
-    if (file_exists(__DIR__ . '/access_token.json')) {
-        $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
-        if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
+    // if (file_exists(__DIR__ . '/access_token.json')) {
+    //     $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
+    //     if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
             
-            return $tokenData['access_token'];
-        }
-    }
+    //         return $tokenData['access_token'];
+    //     }
+    // }
 
     // لو مفيش توكن صالح، نعمل واحد جديد
     $now = time();
@@ -88,11 +88,11 @@ function getAccessTokenFromServiceAccount() {
         throw new Exception('Failed to obtain access token: ' . $resp);
     }
 
-    // ✅ نحفظ التوكن في ملف access_token.json
-    file_put_contents(__DIR__ . '/access_token.json', json_encode([
-        'access_token' => $decoded['access_token'],
-        'expires_at' => time() + 3500
-    ]));
+    // // ✅ نحفظ التوكن في ملف access_token.json
+    // file_put_contents(__DIR__ . '/access_token.json', json_encode([
+    //     'access_token' => $decoded['access_token'],
+    //     'expires_at' => time() + 3500
+    // ]));
 
     return $decoded['access_token'];
 }
@@ -104,7 +104,9 @@ function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=fa
 
 
     $accessToken = getAccessTokenFromServiceAccount();
-
+ echo "🔑 Private Key after cleaning:\n";
+    echo ($accessToken);
+    echo "</pre>";
    
 
     $ch = curl_init($url);
