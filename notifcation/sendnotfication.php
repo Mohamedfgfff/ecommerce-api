@@ -22,18 +22,18 @@ function getServiceAccountJson($path = null) {
 }
 
 function getAccessTokenFromServiceAccount() {
-    $sa = getServiceAccountJson();
+   
 
-    // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
-    if (file_exists(__DIR__ . '/access_token.json')) {
-        $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
-        if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
-            
-            return $tokenData['access_token'];
-        }
+    // ✅ لو موجود توكن صالح في متغير البيئة نرجعه مباشرة
+    $envToken = getenv('FCM_ACCESS_TOKEN');
+    $envExpire = getenv('FCM_ACCESS_TOKEN_EXPIRES');
+
+    if ($envToken && $envExpire && intval($envExpire) > time()) {
+        return $envToken;
     }
+     $sa = getServiceAccountJson();
 
-    // لو مفيش توكن صالح، نعمل واحد جديد
+    // إنشاء توكن جديد
     $now = time();
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
     $claimSet = [
@@ -41,7 +41,7 @@ function getAccessTokenFromServiceAccount() {
         'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
         'aud' => 'https://oauth2.googleapis.com/token',
         'iat' => $now,
-        'exp' => $now + 3600, // token valid 1 hour
+        'exp' => $now + 3600,
     ];
 
     $base64UrlEncode = function($data) {
@@ -74,10 +74,6 @@ function getAccessTokenFromServiceAccount() {
     $resp = curl_exec($ch);
     if ($resp === false) {
         $err = curl_error($ch);
-<<<<<<< HEAD
-    
-=======
->>>>>>> 41fcedd4b1e232a164b91eebaf2188f77304272b
         curl_close($ch);
         throw new Exception('Curl error while obtaining access token: ' . $err);
     }
@@ -88,23 +84,20 @@ function getAccessTokenFromServiceAccount() {
         throw new Exception('Failed to obtain access token: ' . $resp);
     }
 
-    // ✅ نحفظ التوكن في ملف access_token.json
-    file_put_contents(__DIR__ . '/access_token.json', json_encode([
-        'access_token' => $decoded['access_token'],
-        'expires_at' => time() + 3500
-    ]));
+    // ✅ خزّن التوكن وتاريخ الانتهاء في متغيرات بيئة
+    putenv('FCM_ACCESS_TOKEN=' . $decoded['access_token']);
+    putenv('FCM_ACCESS_TOKEN_EXPIRES=' . (time() + 3500));
 
     return $decoded['access_token'];
 }
+
 
 
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
-    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson($serviceAccountPath);
-    $projectId = $sa['project_id'];
+
 
     $accessToken = getAccessTokenFromServiceAccount();
 
