@@ -22,7 +22,15 @@ function getServiceAccountJson($path = null) {
 }
 
 function getAccessTokenFromServiceAccount() {
-    $sa = getServiceAccountJson();
+        try {
+    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+ $sa = getServiceAccountJson($serviceAccountPath);
+
+
+   
+} catch (Exception $ex) {
+    echo 'Error: ' . $ex->getMessage();
+}
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
     if (file_exists(__DIR__ . '/access_token.json')) {
