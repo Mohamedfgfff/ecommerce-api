@@ -130,79 +130,79 @@ function getAccessTokenFromServiceAccount() {
 }
 
 
-function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
-    $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
+// function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
+//     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
-    try {
-    // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson();
-    $projectId = $sa['project_id'];
+//     try {
+//     // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+//  $sa = getServiceAccountJson();
+//     $projectId = $sa['project_id'];
 
-    $accessToken = getAccessTokenFromServiceAccount();
+//     $accessToken = getAccessTokenFromServiceAccount();
 
    
-} catch (Exception $ex) {
-    echo 'Error: ' . $ex->getMessage();
-}
+// } catch (Exception $ex) {
+//     echo 'Error: ' . $ex->getMessage();
+// }
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $accessToken,
-        'Content-Type: application/json; UTF-8'
-    ]);
-    $messageBody=[] ;
-    if($istopic){
-        $messageBody = [
-            'topic' => $topicORtoken,
-            'notification' => [
-                'title' => $title,
-                'body' => $body
-            ],
-            // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
-            'data' => [
-                'pageid' => $pageID,
-                'pagename' => $pageName
-            ],
-            'android' => [
-                'notification' => [
-                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
-                ]
-            ]
-        ];
-    }else{
-        $messageBody = [
-            'token' => $topicORtoken,
-            'notification' => [
-                'title' => $title,
-                'body' => $body
-            ],
-            // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
-            'data' => [
-                'pageid' => $pageID,
-                'pagename' => $pageName
-            ],
-            'android' => [
-                'notification' => [
-                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
-                ]
-            ]
-        ];
-    }
+//     $ch = curl_init($url);
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, [
+//         'Authorization: Bearer ' . $accessToken,
+//         'Content-Type: application/json; UTF-8'
+//     ]);
+//     $messageBody=[] ;
+//     if($istopic){
+//         $messageBody = [
+//             'topic' => $topicORtoken,
+//             'notification' => [
+//                 'title' => $title,
+//                 'body' => $body
+//             ],
+//             // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
+//             'data' => [
+//                 'pageid' => $pageID,
+//                 'pagename' => $pageName
+//             ],
+//             'android' => [
+//                 'notification' => [
+//                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+//                 ]
+//             ]
+//         ];
+//     }else{
+//         $messageBody = [
+//             'token' => $topicORtoken,
+//             'notification' => [
+//                 'title' => $title,
+//                 'body' => $body
+//             ],
+//             // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
+//             'data' => [
+//                 'pageid' => $pageID,
+//                 'pagename' => $pageName
+//             ],
+//             'android' => [
+//                 'notification' => [
+//                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+//                 ]
+//             ]
+//         ];
+//     }
     
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['message' => $messageBody]));
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['message' => $messageBody]));
 
-    $resp = curl_exec($ch);
-    if ($resp === false) {
-        $err = curl_error($ch);
-        curl_close($ch);
-        throw new Exception('Curl error while sending FCM: ' . $err);
-    }
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
-    // echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
-}
+//     $resp = curl_exec($ch);
+//     if ($resp === false) {
+//         $err = curl_error($ch);
+//         curl_close($ch);
+//         throw new Exception('Curl error while sending FCM: ' . $err);
+//     }
+//     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+//     curl_close($ch);
+//     return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
+//     // echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
+// }
 
 
