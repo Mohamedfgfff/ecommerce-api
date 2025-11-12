@@ -2,24 +2,52 @@
 // Dependencies: openssl و curl مفعلين في PHP
 
 function getServiceAccountJson($path = null) {
-    // ✅ لو وُجد متغير بيئة يحتوي على الـ JSON، استخدمه
-    if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
-        $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+    $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+    
+    if ($json && trim($json) !== '') {
+        // بعض الأنظمة مثل Railway تحفظ JSON بسطر واحد بدون \n
         $data = json_decode($json, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $data;
-        } else {
-            throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
+
+        // جرّب تصحيح \n لو JSON فشل
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $jsonFixed = str_replace('\\n', "\n", $json);
+            $data = json_decode($jsonFixed, true);
         }
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid FIREBASE_SERVICE_ACCOUNT_JSON format");
+        }
+
+        // 👇 هنا أهم خطوة — إعادة بناء private_key بالأسطر الصحيحة
+        if (isset($data['private_key'])) {
+            $key = $data['private_key'];
+
+            // إذا المفتاح كله على سطر واحد، قسمه
+            if (!str_contains($key, "\n")) {
+                $key = str_replace(
+                    ['-----BEGIN PRIVATE KEY----- ', ' -----END PRIVATE KEY-----'],
+                    ["-----BEGIN PRIVATE KEY-----\n", "\n-----END PRIVATE KEY-----"],
+                    $key
+                );
+            }
+
+            // لو في \n مهرب بدلها بأسطر فعلية
+            $key = str_replace('\\n', "\n", $key);
+
+            $data['private_key'] = trim($key);
+        }
+
+        return $data;
     }
 
-    // ❌ لو مفيش متغير، ارجع للطريقة القديمة (للتطوير المحلي بس)
+    // fallback لو مفيش env
     if ($path && file_exists($path)) {
         return json_decode(file_get_contents($path), true);
     }
 
-    throw new Exception("Service account not provided via file or environment variable.");
+    throw new Exception("Service account not provided via FIREBASE_SERVICE_ACCOUNT_JSON or file.");
 }
+
 
 function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
