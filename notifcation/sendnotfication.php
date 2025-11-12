@@ -28,7 +28,6 @@ function getAccessTokenFromServiceAccount() {
     if (file_exists(__DIR__ . '/access_token.json')) {
         $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
         if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
-            
             return $tokenData['access_token'];
         }
     }
@@ -52,7 +51,16 @@ function getAccessTokenFromServiceAccount() {
     $jwtClaim = $base64UrlEncode(json_encode($claimSet));
     $unsignedJwt = $jwtHeader . '.' . $jwtClaim;
 
+    // ✅ تصحيح تنسيق الـ private key
     $privateKey = $sa['private_key'];
+    $privateKey = str_replace(['\\n', '\n'], "\n", $privateKey); // تحويل \n إلى سطر جديد
+    $privateKey = trim($privateKey); // إزالة المسافات الزائدة
+
+    // ✅ التأكد من وجود BEGIN/END
+    if (!str_contains($privateKey, '-----BEGIN PRIVATE KEY-----')) {
+        $privateKey = "-----BEGIN PRIVATE KEY-----\n" . $privateKey . "\n-----END PRIVATE KEY-----";
+    }
+
     $signature = '';
     if (!openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
         throw new Exception('Failed to sign JWT');
