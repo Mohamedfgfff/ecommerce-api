@@ -80,8 +80,13 @@ function getAccessTokenFromServiceAccount() {
 
     $privateKey = $sa['private_key'];
     $signature = '';
-    file_put_contents('/tmp/debug_key.txt', $privateKey);
-    if (!openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+    $privateKeyResource = openssl_pkey_get_private($privateKey);
+
+if (!$privateKeyResource) {
+    throw new Exception("❌ Private key is invalid or unreadable");
+}
+    file_put_contents('/tmp/debug_key.txt', $privateKeyResource);
+    if (!openssl_sign($unsignedJwt, $signature, $privateKeyResource, OPENSSL_ALGO_SHA256)) {
         throw new Exception('Failed to sign JWT');
     }
     $signedJwt = $unsignedJwt . '.' . $base64UrlEncode($signature);
