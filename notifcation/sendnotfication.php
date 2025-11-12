@@ -1,13 +1,28 @@
 <?php
 // Dependencies: openssl و curl مفعلين في PHP
 
-function getServiceAccountJson($path) {
-    if (!file_exists($path)) throw new Exception("Service account file not found: $path");
-    return json_decode(file_get_contents($path), true);
+function getServiceAccountJson($path = null) {
+    // ✅ لو وُجد متغير بيئة يحتوي على الـ JSON، استخدمه
+    if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
+        $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+        $data = json_decode($json, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $data;
+        } else {
+            throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
+        }
+    }
+
+    // ❌ لو مفيش متغير، ارجع للطريقة القديمة (للتطوير المحلي بس)
+    if ($path && file_exists($path)) {
+        return json_decode(file_get_contents($path), true);
+    }
+
+    throw new Exception("Service account not provided via file or environment variable.");
 }
 
-function getAccessTokenFromServiceAccount($saJsonPath) {
-    $sa = getServiceAccountJson($saJsonPath);
+function getAccessTokenFromServiceAccount() {
+    $sa = getServiceAccountJson();
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
     if (file_exists(__DIR__ . '/access_token.json')) {
@@ -23,8 +38,8 @@ function getAccessTokenFromServiceAccount($saJsonPath) {
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
     $claimSet = [
         'iss' => $sa['client_email'],
-        'scope' => 'https://www.googleapis.com/auth/firebase.messaging  ',
-        'aud' => 'https://oauth2.googleapis.com/token  ',
+        'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+        'aud' => 'https://oauth2.googleapis.com/token',
         'iat' => $now,
         'exp' => $now + 3600, // token valid 1 hour
     ];
@@ -44,7 +59,7 @@ function getAccessTokenFromServiceAccount($saJsonPath) {
     }
     $signedJwt = $unsignedJwt . '.' . $base64UrlEncode($signature);
 
-    $tokenUrl = 'https://oauth2.googleapis.com/token  ';
+    $tokenUrl = 'https://oauth2.googleapis.com/token';
     $postFields = http_build_query([
         'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
         'assertion' => $signedJwt
@@ -80,14 +95,14 @@ function getAccessTokenFromServiceAccount($saJsonPath) {
 
 
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
-    $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages  :send";
+    $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
     $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
  $sa = getServiceAccountJson($serviceAccountPath);
     $projectId = $sa['project_id'];
 
-    $accessToken = getAccessTokenFromServiceAccount($serviceAccountPath);
+    $accessToken = getAccessTokenFromServiceAccount();
 
    
 } catch (Exception $ex) {
@@ -150,10 +165,8 @@ function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=fa
     }
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    // return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
-    echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
+    return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
+    // echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
 }
-
-
 
 
