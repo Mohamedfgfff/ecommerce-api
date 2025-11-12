@@ -14,8 +14,8 @@ function filterRequest($requestname)
 // functions.php
 
 // دالة جديدة لاستقبال نصوص JSON كما هي
-function jsonrequest($requestname) {
-    return $_POST[$requestname]; // أو يمكنك استخدام json_decode هنا مباشرة
+function jsonrequest($requestname, $default = null) {
+    return $_POST[$requestname] ?? $default;
 }
 
 function getAllData($table, $where = null, $values = null)
