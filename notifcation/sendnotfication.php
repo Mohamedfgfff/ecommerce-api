@@ -9,15 +9,12 @@ function getServiceAccountJson() {
         throw new Exception("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
     }
 
-    // الخطوة الأهم: تنظيف الـ private key بدقة
+    // تنظيف الـ private key
     $privateKey = trim($privateKey);
+    $privateKey = str_replace('\\n', "\n", $privateKey);
+    $privateKey = str_replace('\n', "\n", $privateKey);
+    $privateKey = str_replace('\\\\n', "\n", $privateKey);
 
-    // استبدال جميع أشكال \n بسطر جديد حقيقي
-    $privateKey = str_replace('\\n', "\n", $privateKey); // من JSON escaped
-    $privateKey = str_replace('\n', "\n", $privateKey);  // من نسخ يدوي
-    $privateKey = str_replace('\\\\n', "\n", $privateKey); // أحيانًا يتحول لـ \\n
-
-    // تقسيم السطر لسطور وتنظيف كل سطر
     $lines = explode("\n", $privateKey);
     $cleanLines = [];
     foreach ($lines as $line) {
@@ -28,7 +25,7 @@ function getServiceAccountJson() {
     }
     $privateKey = implode("\n", $cleanLines);
 
-    // التأكد من BEGIN و END
+    // التأكد من وجود BEGIN و END
     if (strpos($privateKey, '-----BEGIN PRIVATE KEY-----') === false) {
         array_unshift($cleanLines, '-----BEGIN PRIVATE KEY-----');
     }
@@ -37,12 +34,19 @@ function getServiceAccountJson() {
     }
     $privateKey = implode("\n", $cleanLines);
 
+    // 👇 هنا نطبع المفتاح بعد التنظيف
+    echo "<pre>";
+    echo "🔑 Private Key after cleaning:\n";
+    echo htmlspecialchars($privateKey);
+    echo "</pre>";
+
     return [
         'client_email' => $clientEmail,
         'private_key'  => $privateKey,
         'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0'
     ];
 }
+
 
 function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
