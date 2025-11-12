@@ -74,7 +74,10 @@ function getAccessTokenFromServiceAccount() {
     $resp = curl_exec($ch);
     if ($resp === false) {
         $err = curl_error($ch);
+<<<<<<< HEAD
     
+=======
+>>>>>>> 41fcedd4b1e232a164b91eebaf2188f77304272b
         curl_close($ch);
         throw new Exception('Curl error while obtaining access token: ' . $err);
     }
