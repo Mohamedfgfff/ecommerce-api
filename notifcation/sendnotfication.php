@@ -41,8 +41,8 @@ function getServiceAccountJson() {
     echo "</pre>";
 
     return [
-        $clientEmail,
-        $privateKey,
+        'client_email' => $clientEmail,
+        'private_key'  => $privateKey,
         'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0'
     ];
 }
