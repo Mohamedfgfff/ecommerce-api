@@ -27,7 +27,7 @@ if ($count > 0) {
    sendEmail($email,"verify Code Ecommerce","verify Code $verifycode");
 
 
-//    sendEmaildepage($verifycode,$email,$username);
+   sendEmaildepage($verifycode,$email,$username);
 
    
 }
