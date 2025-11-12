@@ -5,5 +5,5 @@ include "sendnotfication.php";
 
 
 // getAllData('users',"user_name='moo'");
-sendFcmV1("news","test","test","","",true);
+sendFcmV1("users","test","test","","",true);
 ?>
