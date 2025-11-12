@@ -1,9 +1,13 @@
 <?php
 // اقرأ بيانات قاعدة البيانات من متغيرات البيئة (Railway) أو استخدم قيم افتراضية للتطوير المحلي
+// $host = $_ENV['MYSQLHOST'] ?? 'localhost';
+// $dbname = $_ENV['MYSQLDATABASE'] ?? 'saltuk';
+// $username = $_ENV['MYSQLUSER'] ?? 'root';
+// $password = $_ENV['MYSQLPASSWORD'] ?? '';
 $host = $_ENV['MYSQLHOST'] ?? 'localhost';
-$dbname = $_ENV['MYSQLDATABASE'] ?? 'saltuk';
-$username = $_ENV['MYSQLUSER'] ?? 'root';
-$password = $_ENV['MYSQLPASSWORD'] ?? '';
+$dbname = $_ENV['MYSQLDATABASE'] ?? 'railway'; // ← مش 'saltuk'
+$user = $_ENV['MYSQLUSER'] ?? 'root';
+$pass = $_ENV['MYSQLPASSWORD'] ?? '';
 
 // إعداد DSN
 $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8";
