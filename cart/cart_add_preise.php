@@ -1,7 +1,7 @@
 <?php
 
-include_once ".../connect.php";
-include_once ".../functions.php"; // افترض أن هذا الملف يحتوي على filterrequest و jsonrequest
+include_once "../connect.php";
+include_once "../functions.php"; // افترض أن هذا الملف يحتوي على filterrequest و jsonrequest
 
 // --- استقبال البيانات ---
 $user_id = filterrequest("user_id");
