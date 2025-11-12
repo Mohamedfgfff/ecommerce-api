@@ -36,3 +36,50 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+
+
+
+
+// <?php
+// // إعدادات الاتصال المحلية لـ XAMPP
+// $host = 'localhost';
+// $dbname = 'saltuk';
+// $username = 'root';
+// $password = ''; // عادة كلمة المرور فارغة على XAMPP
+
+// // إعداد DSN
+// $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
+
+// // خيارات PDO
+// $options = [
+//     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // عرض الأخطاء
+//     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+//     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+// ];
+
+// // عدد الصفوف في الصفحة
+// $countrowinpage = 9;
+
+// try {
+//     $con = new PDO($dsn, $username, $password, $options);
+
+//     // إعداد الـ headers للسماح بالـ CORS
+//     header("Access-Control-Allow-Origin: *");
+//     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+//     header("Access-Control-Allow-Methods: POST, OPTIONS, GET");
+
+//     // تضمين الدوال
+//     include "functions.php";
+
+//     // إذا كان فيه تحقق دخول
+//     if (!isset($notAuth)) {
+//         // checkAuthenticate();
+//     }
+
+// } catch (PDOException $e) {
+//     http_response_code(500);
+//     echo json_encode([
+//         'error' => 'Database connection failed',
+//         'message' => $e->getMessage()
+//     ]);
+// }
