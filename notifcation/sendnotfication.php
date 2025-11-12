@@ -1,51 +1,32 @@
 <?php
 // Dependencies: openssl و curl مفعلين في PHP
 
-function getServiceAccountJson($path = null) {
-    $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
-    
-    if ($json && trim($json) !== '') {
-        // بعض الأنظمة مثل Railway تحفظ JSON بسطر واحد بدون \n
-        $data = json_decode($json, true);
+function getServiceAccountJson() {
+    // نجيب القيم من متغيرات البيئة
+    $clientEmail = getenv('FIREBASE_CLIENT_EMAIL');
+    $privateKey  = getenv('FIREBASE_PRIVATE_KEY');
 
-        // جرّب تصحيح \n لو JSON فشل
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $jsonFixed = str_replace('\\n', "\n", $json);
-            $data = json_decode($jsonFixed, true);
-        }
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Invalid FIREBASE_SERVICE_ACCOUNT_JSON format");
-        }
-
-        // 👇 هنا أهم خطوة — إعادة بناء private_key بالأسطر الصحيحة
-        if (isset($data['private_key'])) {
-            $key = $data['private_key'];
-
-            // إذا المفتاح كله على سطر واحد، قسمه
-            if (!str_contains($key, "\n")) {
-                $key = str_replace(
-                    ['-----BEGIN PRIVATE KEY----- ', ' -----END PRIVATE KEY-----'],
-                    ["-----BEGIN PRIVATE KEY-----\n", "\n-----END PRIVATE KEY-----"],
-                    $key
-                );
-            }
-
-            // لو في \n مهرب بدلها بأسطر فعلية
-            $key = str_replace('\\n', "\n", $key);
-
-            $data['private_key'] = trim($key);
-        }
-
-        return $data;
+    if (!$clientEmail || !$privateKey) {
+        throw new Exception("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY in environment variables.");
     }
 
-    // fallback لو مفيش env
-    if ($path && file_exists($path)) {
-        return json_decode(file_get_contents($path), true);
+    // نعيد بناء الشكل المتوقع لـ Service Account (زي ما الكود كان بيستخدمه)
+    $privateKey = str_replace('\\n', "\n", $privateKey); // تحويل \n إلى أسطر حقيقية
+    $privateKey = trim($privateKey);
+
+    // نتأكد من وجود BEGIN/END لو مش موجودين
+    if (!str_contains($privateKey, '-----BEGIN PRIVATE KEY-----')) {
+        $privateKey = "-----BEGIN PRIVATE KEY-----\n" . $privateKey;
+    }
+    if (!str_contains($privateKey, '-----END PRIVATE KEY-----')) {
+        $privateKey .= "\n-----END PRIVATE KEY-----";
     }
 
-    throw new Exception("Service account not provided via FIREBASE_SERVICE_ACCOUNT_JSON or file.");
+    return [
+        'client_email' => $clientEmail,
+        'private_key'  => $privateKey,
+        'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0' // اختياري
+    ];
 }
 
 
@@ -130,79 +111,79 @@ function getAccessTokenFromServiceAccount() {
 }
 
 
-// function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
-//     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
+function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
+    $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
-//     try {
-//     // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
-//  $sa = getServiceAccountJson();
-//     $projectId = $sa['project_id'];
+    try {
+    // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+ $sa = getServiceAccountJson();
+    $projectId = $sa['project_id'];
 
-//     $accessToken = getAccessTokenFromServiceAccount();
+    $accessToken = getAccessTokenFromServiceAccount();
 
    
-// } catch (Exception $ex) {
-//     echo 'Error: ' . $ex->getMessage();
-// }
+} catch (Exception $ex) {
+    echo 'Error: ' . $ex->getMessage();
+}
 
-//     $ch = curl_init($url);
-//     curl_setopt($ch, CURLOPT_POST, true);
-//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-//         'Authorization: Bearer ' . $accessToken,
-//         'Content-Type: application/json; UTF-8'
-//     ]);
-//     $messageBody=[] ;
-//     if($istopic){
-//         $messageBody = [
-//             'topic' => $topicORtoken,
-//             'notification' => [
-//                 'title' => $title,
-//                 'body' => $body
-//             ],
-//             // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
-//             'data' => [
-//                 'pageid' => $pageID,
-//                 'pagename' => $pageName
-//             ],
-//             'android' => [
-//                 'notification' => [
-//                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
-//                 ]
-//             ]
-//         ];
-//     }else{
-//         $messageBody = [
-//             'token' => $topicORtoken,
-//             'notification' => [
-//                 'title' => $title,
-//                 'body' => $body
-//             ],
-//             // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
-//             'data' => [
-//                 'pageid' => $pageID,
-//                 'pagename' => $pageName
-//             ],
-//             'android' => [
-//                 'notification' => [
-//                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
-//                 ]
-//             ]
-//         ];
-//     }
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $accessToken,
+        'Content-Type: application/json; UTF-8'
+    ]);
+    $messageBody=[] ;
+    if($istopic){
+        $messageBody = [
+            'topic' => $topicORtoken,
+            'notification' => [
+                'title' => $title,
+                'body' => $body
+            ],
+            // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
+            'data' => [
+                'pageid' => $pageID,
+                'pagename' => $pageName
+            ],
+            'android' => [
+                'notification' => [
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+                ]
+            ]
+        ];
+    }else{
+        $messageBody = [
+            'token' => $topicORtoken,
+            'notification' => [
+                'title' => $title,
+                'body' => $body
+            ],
+            // data must be string values; إذا فيه JSON مُتداخل حوّله إلى string
+            'data' => [
+                'pageid' => $pageID,
+                'pagename' => $pageName
+            ],
+            'android' => [
+                'notification' => [
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+                ]
+            ]
+        ];
+    }
     
-//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['message' => $messageBody]));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['message' => $messageBody]));
 
-//     $resp = curl_exec($ch);
-//     if ($resp === false) {
-//         $err = curl_error($ch);
-//         curl_close($ch);
-//         throw new Exception('Curl error while sending FCM: ' . $err);
-//     }
-//     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-//     curl_close($ch);
-//     return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
-//     // echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
-// }
+    $resp = curl_exec($ch);
+    if ($resp === false) {
+        $err = curl_error($ch);
+        curl_close($ch);
+        throw new Exception('Curl error while sending FCM: ' . $err);
+    }
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ['http_code' => $httpCode, 'response' => json_decode($resp, true)];
+    // echo json_encode(['http_code' => $httpCode, 'response' => json_decode($resp, true)]);
+}
 
 
