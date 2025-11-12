@@ -3,19 +3,15 @@
 
 function getServiceAccountJson($path = null) {
     // ✅ لو وُجد متغير بيئة يحتوي على الـ JSON، استخدمه
-    if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
-        $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
-        $data = json_decode($json, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-             echo "<pre>";
-    echo "🔑 Private Key after cleaning:\n";
-    echo json_encode($data);
-    echo "</pre>";
-            return $data;
-        } else {
-            throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
-        }
-    }
+    // if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
+    //     $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+    //     $data = json_decode($json, true);
+    //     if (json_last_error() === JSON_ERROR_NONE) {
+    //         return $data;
+    //     } else {
+    //         throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
+    //     }
+    // }
 
     // ❌ لو مفيش متغير، ارجع للطريقة القديمة (للتطوير المحلي بس)
     if ($path && file_exists($path)) {
@@ -29,13 +25,13 @@ function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
-    // if (file_exists(__DIR__ . '/access_token.json')) {
-    //     $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
-    //     if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
+    if (file_exists(__DIR__ . '/access_token.json')) {
+        $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
+        if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
             
-    //         return $tokenData['access_token'];
-    //     }
-    // }
+            return $tokenData['access_token'];
+        }
+    }
 
     // لو مفيش توكن صالح، نعمل واحد جديد
     $now = time();
@@ -88,11 +84,11 @@ function getAccessTokenFromServiceAccount() {
         throw new Exception('Failed to obtain access token: ' . $resp);
     }
 
-    // // ✅ نحفظ التوكن في ملف access_token.json
-    // file_put_contents(__DIR__ . '/access_token.json', json_encode([
-    //     'access_token' => $decoded['access_token'],
-    //     'expires_at' => time() + 3500
-    // ]));
+    // ✅ نحفظ التوكن في ملف access_token.json
+    file_put_contents(__DIR__ . '/access_token.json', json_encode([
+        'access_token' => $decoded['access_token'],
+        'expires_at' => time() + 3500
+    ]));
 
     return $decoded['access_token'];
 }
@@ -101,13 +97,17 @@ function getAccessTokenFromServiceAccount() {
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
-
+    try {
+    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+ $sa = getServiceAccountJson($serviceAccountPath);
+    $projectId = $sa['project_id'];
 
     $accessToken = getAccessTokenFromServiceAccount();
- echo "🔑 Private Key after cleaning:\n";
-    echo ($accessToken);
-    echo "</pre>";
+
    
+} catch (Exception $ex) {
+    echo 'Error: ' . $ex->getMessage();
+}
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
