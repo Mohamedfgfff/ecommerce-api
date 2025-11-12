@@ -98,8 +98,8 @@ function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=fa
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
-    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson($serviceAccountPath);
+    // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+ $sa = getServiceAccountJson();
     $projectId = $sa['project_id'];
 
     $accessToken = getAccessTokenFromServiceAccount();
