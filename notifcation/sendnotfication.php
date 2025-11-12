@@ -9,7 +9,7 @@ function getServiceAccountJson($path = null) {
         if (json_last_error() === JSON_ERROR_NONE) {
              echo "<pre>";
     echo "🔑 Private Key after cleaning:\n";
-    echo htmlspecialchars($data);
+    echo json_encode($data);
     echo "</pre>";
             return $data;
         } else {
