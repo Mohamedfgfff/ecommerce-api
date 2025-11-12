@@ -1,13 +1,28 @@
 <?php
 // Dependencies: openssl و curl مفعلين في PHP
 
-function getServiceAccountJson($path) {
-    if (!file_exists($path)) throw new Exception("Service account file not found: $path");
-    return json_decode(file_get_contents($path), true);
+function getServiceAccountJson($path = null) {
+    // ✅ لو وُجد متغير بيئة يحتوي على الـ JSON، استخدمه
+    if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
+        $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+        $data = json_decode($json, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $data;
+        } else {
+            throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
+        }
+    }
+
+    // ❌ لو مفيش متغير، ارجع للطريقة القديمة (للتطوير المحلي بس)
+    if ($path && file_exists($path)) {
+        return json_decode(file_get_contents($path), true);
+    }
+
+    throw new Exception("Service account not provided via file or environment variable.");
 }
 
-function getAccessTokenFromServiceAccount($saJsonPath) {
-    $sa = getServiceAccountJson($saJsonPath);
+function getAccessTokenFromServiceAccount() {
+    $sa = getServiceAccountJson();
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
     if (file_exists(__DIR__ . '/access_token.json')) {
@@ -87,7 +102,7 @@ function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=fa
  $sa = getServiceAccountJson($serviceAccountPath);
     $projectId = $sa['project_id'];
 
-    $accessToken = getAccessTokenFromServiceAccount($serviceAccountPath);
+    $accessToken = getAccessTokenFromServiceAccount();
 
    
 } catch (Exception $ex) {
