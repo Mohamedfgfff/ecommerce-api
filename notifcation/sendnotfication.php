@@ -21,27 +21,19 @@ function getServiceAccountJson($path = null) {
     throw new Exception("Service account not provided via file or environment variable.");
 }
 
-function getAccessTokenFromServiceAccount() {
-        try {
-    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson($serviceAccountPath);
-
-
-   
-} catch (Exception $ex) {
-    echo 'Error sa: ' . $ex->getMessage();
-}
-
-    // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
-    if (file_exists(__DIR__ . '/access_token.json')) {
-        $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
-        if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
-            
-            return $tokenData['access_token'];
-        }
+function getAccessTokenFromServiceAccount(array $sa) {
+    if (empty($sa['private_key']) || empty($sa['client_email'])) {
+        throw new Exception('Service account JSON missing private_key or client_email.');
     }
 
-    // لو مفيش توكن صالح، نعمل واحد جديد
+    $privateKey = str_replace('\\n', "\n", $sa['private_key']);
+    $privateKey = trim($privateKey);
+
+    $pkey = openssl_pkey_get_private($privateKey);
+    if (!$pkey) {
+        throw new Exception('Failed to load private key: ' . openssl_error_string());
+    }
+
     $now = time();
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
     $claimSet = [
@@ -49,22 +41,17 @@ function getAccessTokenFromServiceAccount() {
         'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
         'aud' => 'https://oauth2.googleapis.com/token',
         'iat' => $now,
-        'exp' => $now + 3600, // token valid 1 hour
+        'exp' => $now + 3600,
     ];
 
-    $base64UrlEncode = function($data) {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    };
+    $base64UrlEncode = fn($data) => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    $unsignedJwt = $base64UrlEncode(json_encode($header)) . '.' . $base64UrlEncode(json_encode($claimSet));
 
-    $jwtHeader = $base64UrlEncode(json_encode($header));
-    $jwtClaim = $base64UrlEncode(json_encode($claimSet));
-    $unsignedJwt = $jwtHeader . '.' . $jwtClaim;
-
-    $privateKey = $sa['private_key'];
-    $signature = '';
-    if (!openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
-        throw new Exception('Failed to sign JWT');
+    if (!openssl_sign($unsignedJwt, $signature, $pkey, OPENSSL_ALGO_SHA256)) {
+        throw new Exception('Failed to sign JWT: ' . openssl_error_string());
     }
+    openssl_pkey_free($pkey);
+
     $signedJwt = $unsignedJwt . '.' . $base64UrlEncode($signature);
 
     $tokenUrl = 'https://oauth2.googleapis.com/token';
@@ -81,9 +68,7 @@ function getAccessTokenFromServiceAccount() {
 
     $resp = curl_exec($ch);
     if ($resp === false) {
-        $err = curl_error($ch);
-        curl_close($ch);
-        throw new Exception('Curl error while obtaining access token: ' . $err);
+        throw new Exception('Curl error: ' . curl_error($ch));
     }
     curl_close($ch);
 
@@ -92,25 +77,22 @@ function getAccessTokenFromServiceAccount() {
         throw new Exception('Failed to obtain access token: ' . $resp);
     }
 
-    // ✅ نحفظ التوكن في ملف access_token.json
-    file_put_contents(__DIR__ . '/access_token.json', json_encode([
-        'access_token' => $decoded['access_token'],
-        'expires_at' => time() + 3500
-    ]));
-
     return $decoded['access_token'];
 }
+
 
 
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
-    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson($serviceAccountPath);
-    $projectId = $sa['project_id'];
+//     $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+//  $sa = getServiceAccountJson($serviceAccountPath);
+//     $projectId = $sa['project_id'];
 
-    $accessToken = getAccessTokenFromServiceAccount();
+ $sa = getServiceAccountJson(__DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json');
+$accessToken = getAccessTokenFromServiceAccount($sa);
+
 
    
 } catch (Exception $ex) {
