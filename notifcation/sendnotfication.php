@@ -29,7 +29,7 @@ function getAccessTokenFromServiceAccount() {
 
    
 } catch (Exception $ex) {
-    echo 'Error: ' . $ex->getMessage();
+    echo 'Error sa: ' . $ex->getMessage();
 }
 
     // ✅ أولاً: لو عندنا توكن محفوظ ولسه صالح نرجّعه مباشرة
