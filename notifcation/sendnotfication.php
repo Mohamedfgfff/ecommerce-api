@@ -1,52 +1,29 @@
 <?php
 // Dependencies: openssl و curl مفعلين في PHP
 
-function getServiceAccountJson() {
-    $clientEmail = getenv('FIREBASE_CLIENT_EMAIL');
-    $privateKey  = getenv('FIREBASE_PRIVATE_KEY');
-
-    if (!$clientEmail || !$privateKey) {
-        throw new Exception("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
-    }
-
-    // تنظيف الـ private key
-    $privateKey = trim($privateKey);
-    $privateKey = str_replace('\\n', "\n", $privateKey);
-    $privateKey = str_replace('\n', "\n", $privateKey);
-    $privateKey = str_replace('\\\\n', "\n", $privateKey);
-
-    $lines = explode("\n", $privateKey);
-    $cleanLines = [];
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line !== '') {
-            $cleanLines[] = $line;
+function getServiceAccountJson($path = null) {
+    // ✅ لو وُجد متغير بيئة يحتوي على الـ JSON، استخدمه
+    if (getenv('FIREBASE_SERVICE_ACCOUNT_JSON')) {
+        $json = getenv('FIREBASE_SERVICE_ACCOUNT_JSON');
+        $data = json_decode($json, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+             echo "<pre>";
+    echo "🔑 Private Key after cleaning:\n";
+    echo htmlspecialchars($data);
+    echo "</pre>";
+            return $data;
+        } else {
+            throw new Exception("Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON");
         }
     }
-    $privateKey = implode("\n", $cleanLines);
 
-    // التأكد من وجود BEGIN و END
-    if (strpos($privateKey, '-----BEGIN PRIVATE KEY-----') === false) {
-        array_unshift($cleanLines, '-----BEGIN PRIVATE KEY-----');
+    // ❌ لو مفيش متغير، ارجع للطريقة القديمة (للتطوير المحلي بس)
+    if ($path && file_exists($path)) {
+        return json_decode(file_get_contents($path), true);
     }
-    if (strpos($privateKey, '-----END PRIVATE KEY-----') === false) {
-        $cleanLines[] = '-----END PRIVATE KEY-----';
-    }
-    $privateKey = implode("\n", $cleanLines);
 
-    // 👇 هنا نطبع المفتاح بعد التنظيف
-    echo "<pre>";
-    echo "🔑 Private Key after cleaning:\n";
-    echo htmlspecialchars($privateKey);
-    echo "</pre>";
-
-    return [
-        'client_email' => $clientEmail,
-        'private_key'  => $privateKey,
-        'project_id'   => getenv('FIREBASE_PROJECT_ID') ?: 'todo-bbca0'
-    ];
+    throw new Exception("Service account not provided via file or environment variable.");
 }
-
 
 function getAccessTokenFromServiceAccount() {
     $sa = getServiceAccountJson();
@@ -55,6 +32,7 @@ function getAccessTokenFromServiceAccount() {
     if (file_exists(__DIR__ . '/access_token.json')) {
         $tokenData = json_decode(file_get_contents(__DIR__ . '/access_token.json'), true);
         if (isset($tokenData['expires_at']) && $tokenData['expires_at'] > time()) {
+            
             return $tokenData['access_token'];
         }
     }
@@ -80,13 +58,7 @@ function getAccessTokenFromServiceAccount() {
 
     $privateKey = $sa['private_key'];
     $signature = '';
-    $privateKeyResource = openssl_pkey_get_private($privateKey);
-
-if (!$privateKeyResource) {
-    throw new Exception("❌ Private key is invalid or unreadable");
-}
-    file_put_contents('/tmp/debug_key.txt', $privateKeyResource);
-    if (!openssl_sign($unsignedJwt, $signature, $privateKeyResource, OPENSSL_ALGO_SHA256)) {
+    if (!openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
         throw new Exception('Failed to sign JWT');
     }
     $signedJwt = $unsignedJwt . '.' . $base64UrlEncode($signature);
@@ -127,19 +99,11 @@ if (!$privateKeyResource) {
 
 
 function sendFcmV1($topicORtoken,$title,$body,$pageID,$pageName,bool $istopic=false) {
-
-
-    try {
-  $token = getAccessTokenFromServiceAccount();
-  echo "✅ Access token generated successfully!";
-} catch (Exception $e) {
-  echo "❌ " . $e->getMessage();
-}
     $url = "https://fcm.googleapis.com/v1/projects/todo-bbca0/messages:send";
  
     try {
-    // $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
- $sa = getServiceAccountJson();
+    $serviceAccountPath = __DIR__ . '/todo-bbca0-firebase-adminsdk-fbsvc-be1de1e3bb.json'; // ضع المسار الصحيح لملف JSON
+ $sa = getServiceAccountJson($serviceAccountPath);
     $projectId = $sa['project_id'];
 
     $accessToken = getAccessTokenFromServiceAccount();
