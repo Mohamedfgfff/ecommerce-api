@@ -74,7 +74,12 @@ try {
     send_json(['status' => 'success', 'data' => $data]);
 
 } catch (PDOException $e) {
-    // سجّل الخطأ ولا تعرضه للعميل في الإنتاج
-    file_put_contents(__DIR__ . '/debug_sql_errors.log', date('Y-m-d H:i:s') . " - PDO ERROR: " . $e->getMessage() . "\n\n", FILE_APPEND);
-    send_json(['status' => 'fail', 'message' => 'Server error']);
+    // مؤقتا فقط أثناء التصحيح: عرض رسالة الخطأ الحقيقية
+    if (ob_get_length()) ob_clean();
+    echo json_encode([
+        "status" => "fail",
+        "message" => "Server error",
+        "error" => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
