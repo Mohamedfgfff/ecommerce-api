@@ -5,10 +5,10 @@ if (php_sapi_name() !== 'cli' && !isset($_GET['run'])) {
 }
 
 // مسار ملف SQL
-$sqlFile = __DIR__ . '/saltuk.sql';
+$sqlFile = __DIR__ . '/favorites.sql';
 
 if (!file_exists($sqlFile)) {
-    die('❌ File saltuk.sql not found!');
+    die('❌ File favorites.sql not found!');
 }
 
 $sql = file_get_contents($sqlFile);
