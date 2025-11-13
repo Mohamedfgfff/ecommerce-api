@@ -36,7 +36,7 @@ try {
     echo "✅ Connected to database: " . htmlspecialchars($db) . "<br><br>";
 
     // تحقق إن كان جدول favorites موجوداً
-    $tableName = 'favorites';
+    $tableName = 'cart';
     $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.tables WHERE table_schema = ? AND table_name = ?");
     $stmt->execute([$db, $tableName]);
     $exists = (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt'] > 0;
