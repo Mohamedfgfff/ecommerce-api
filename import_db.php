@@ -8,9 +8,9 @@ if (php_sapi_name() !== 'cli' && !isset($_GET['run'])) {
 $replace = isset($_GET['replace']) && ($_GET['replace'] == '1' || strtolower($_GET['replace']) === 'true');
 
 // مسار ملف SQL
-$sqlFile = __DIR__ . '/favorites.sql';
+$sqlFile = __DIR__ . '/cart.sql';
 if (!file_exists($sqlFile)) {
-    die('❌ File favorites.sql not found!');
+    die('❌ File cart.sql not found!');
 }
 
 $sql = file_get_contents($sqlFile);
