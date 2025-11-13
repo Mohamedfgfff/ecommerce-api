@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 13, 2025 at 12:52 PM
+-- Generation Time: Nov 13, 2025 at 01:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -33,7 +33,7 @@ CREATE TABLE `favorites` (
   `favorite_product_id` varchar(100) NOT NULL,
   `product_title` varchar(255) NOT NULL,
   `product_image` varchar(500) NOT NULL,
-  `product_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `product_price` varchar(50) NOT NULL DEFAULT '0.00',
   `favorite_platform` varchar(50) NOT NULL,
   `goods_sn` varchar(100) DEFAULT NULL,
   `category_id` varchar(255) DEFAULT NULL,
