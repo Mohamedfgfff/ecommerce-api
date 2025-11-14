@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 13, 2025 at 01:55 PM
+-- Generation Time: Nov 14, 2025 at 11:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,8 +30,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `cart` (
   `cart_id` int(11) NOT NULL,
   `cart_user_id` int(11) NOT NULL,
-  `cart_product_id` int(11) NOT NULL,
-  `cart_attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`cart_attributes`)),
+  `cart_product_id` varchar(100) NOT NULL,
+  `cart_attributes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `cart_attributes_hash` varchar(64) NOT NULL,
   `cart_available_quantity` int(11) NOT NULL DEFAULT 0,
   `cart_quantity` int(11) NOT NULL DEFAULT 1,
