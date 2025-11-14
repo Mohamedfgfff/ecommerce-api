@@ -38,7 +38,7 @@ if ($existing_item) {
     // نقارن الكمية الحالية بالكمية المتاحة التي أرسلها التطبيق
     if ($current_quantity >= $live_available_quantity) {
         // إذا كانت الكمية الحالية تساوي أو تزيد عن المتاح، أرجع رسالة خطأ
-        echo json_encode(array("status" => "fail", "message" => "full"));
+        echo json_encode(array("status" => "fail", "message" => "Quantity exceeds available stock"));
         exit(); // أوقف التنفيذ
     }
 
