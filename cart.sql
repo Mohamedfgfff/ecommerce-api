@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 14, 2025 at 11:12 PM
+-- Generation Time: Nov 15, 2025 at 12:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,7 +32,6 @@ CREATE TABLE `cart` (
   `cart_user_id` int(11) NOT NULL,
   `cart_product_id` varchar(100) NOT NULL,
   `cart_attributes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `cart_attributes_hash` varchar(64) NOT NULL,
   `cart_available_quantity` int(11) NOT NULL DEFAULT 0,
   `cart_quantity` int(11) NOT NULL DEFAULT 1,
   `cart_created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -53,7 +52,6 @@ CREATE TABLE `cart` (
 --
 ALTER TABLE `cart`
   ADD PRIMARY KEY (`cart_id`),
-  ADD UNIQUE KEY `uniq_user_product_attrs_hash` (`cart_user_id`,`cart_product_id`,`cart_attributes_hash`),
   ADD KEY `idx_cart_user` (`cart_user_id`),
   ADD KEY `idx_cart_product` (`cart_product_id`);
 
@@ -65,7 +63,7 @@ ALTER TABLE `cart`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
