@@ -45,8 +45,8 @@ $cart_attributes_raw = get_input('attributes', $jsonInput);
 $cart_available_quantity = get_input('available_quantity', $jsonInput);
 $platform = get_input('platform', $jsonInput);
 $cart_tier_raw = get_input('cart_tier', $jsonInput);
-$goods_sn = get_request("goods_sn", $jsonInput);
-$category_id = get_request("category_id", $jsonInput);
+$goods_sn = get_input("goods_sn", $jsonInput);
+$category_id = get_input("category_id", $jsonInput);
 
 // تعامُل مع attributes: ممكن تكون JSON-string أو array
 $cart_attributes = null;
