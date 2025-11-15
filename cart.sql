@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 15, 2025 at 12:21 AM
+-- Generation Time: Nov 15, 2025 at 01:52 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,9 @@ CREATE TABLE `cart` (
   `cart_product_image` varchar(255) DEFAULT NULL,
   `cart_price` varchar(100) NOT NULL,
   `cart_platform` varchar(100) NOT NULL,
-  `cart_tier` varchar(255) DEFAULT NULL
+  `cart_tier` varchar(255) DEFAULT NULL,
+  `category_id` varchar(100) DEFAULT NULL,
+  `goods_sn` int(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
