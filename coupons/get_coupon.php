@@ -40,7 +40,7 @@ if (!isset($con) || !($con instanceof PDO)) {
 
 try {
     // 1) fetch coupon
-    $stmt = $con->prepare("SELECT coupon_id, coupon_name, coupon_platfrom, coupon_discount, coupon_expired, usage_limit, is_active FROM coupon WHERE coupon_name = ?");
+    $stmt = $con->prepare("SELECT coupon_id, coupon_name, coupon_platfrom, coupon_discount, coupon_expired, usage_limit, is_active FROM coupons WHERE coupon_name = ?");
     $stmt->execute([$code]);
     $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
 
