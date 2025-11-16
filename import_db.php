@@ -8,9 +8,9 @@ if (php_sapi_name() !== 'cli' && !isset($_GET['run'])) {
 $replace = isset($_GET['replace']) && ($_GET['replace'] == '1' || strtolower($_GET['replace']) === 'true');
 
 // مسار ملف SQL
-$sqlFile = __DIR__ . '/cart.sql';
+$sqlFile = __DIR__ . '/coupons.sql';
 if (!file_exists($sqlFile)) {
-    die('❌ File cart.sql not found!');
+    die('❌ File coupons.sql not found!');
 }
 
 $sql = file_get_contents($sqlFile);
@@ -36,7 +36,7 @@ try {
     echo "✅ Connected to database: " . htmlspecialchars($db) . "<br><br>";
 
     // تحقق إن كان جدول favorites موجوداً
-    $tableName = 'cart';
+    $tableName = 'coupons';
     $stmt = $pdo->prepare("SELECT COUNT(*) AS cnt FROM information_schema.tables WHERE table_schema = ? AND table_name = ?");
     $stmt->execute([$db, $tableName]);
     $exists = (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt'] > 0;
