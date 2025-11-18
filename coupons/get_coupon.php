@@ -139,7 +139,7 @@ try {
         'data' => [
             'coupon_id' => (int)$coupon['coupon_id'],
             'coupon_name' => $coupon['coupon_name'],
-            'coupon_discount' => isset($coupon['coupon_discount']) ? (int)$coupon['coupon_discount'] : 0,
+            'coupon_discount' => $coupon['coupon_discount'],
             'coupon_platfrom' => $coupon['coupon_platfrom'],
             'coupon_expired' => $coupon['coupon_expired'],
             'usage_limit' => $usageLimit > 0 ? $usageLimit : null,
