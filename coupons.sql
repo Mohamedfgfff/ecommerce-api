@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2025 at 08:11 PM
+-- Generation Time: Nov 18, 2025 at 06:50 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `coupons` (
   `coupon_id` int(11) NOT NULL,
   `coupon_name` varchar(100) NOT NULL,
   `coupon_platfrom` varchar(50) NOT NULL,
-  `coupon_discount` smallint(6) NOT NULL DEFAULT 0,
+  `coupon_discount` double NOT NULL DEFAULT 0,
   `coupon_expired` datetime NOT NULL,
   `usage_limit` int(11) NOT NULL,
   `is_active` smallint(6) NOT NULL DEFAULT 1
