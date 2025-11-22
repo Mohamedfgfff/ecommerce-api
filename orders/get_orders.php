@@ -40,7 +40,7 @@ try {
                    c.coupon_name, c.coupon_discount
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
-            LEFT JOIN coupon c ON o.coupon_id = c.coupon_id
+            LEFT JOIN coupons c ON o.coupon_id = c.coupon_id
             WHERE o.order_id = ? AND o.user_id = ? LIMIT 1
         ");
         $stmt->execute([$order_id, $user_id]);
