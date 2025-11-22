@@ -1,13 +1,5 @@
 <?php
-// get_orders.php
-// Usage:
-//  GET  /get_orders.php?user_id=55&order_id=24
-//  GET  /get_orders.php?user_id=55&status=pending_approval
-//  GET  /get_orders.php?user_id=55
-// Or POST JSON: { "user_id":55, "order_id":24 } etc.
-//
-// Returns JSON: success + order(s) or error.
-
+// get_orders.php (fixed: don't bind LIMIT/OFFSET as params; ensure table names match your DB)
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
@@ -24,7 +16,6 @@ $raw = file_get_contents('php://input');
 $input = json_decode($raw, true);
 if (!is_array($input)) $input = $_GET + $_POST;
 
-// اقرأ المتغيرات
 $user_id  = isset($input['user_id']) ? intval($input['user_id']) : null;
 $order_id = isset($input['order_id']) ? intval($input['order_id']) : null;
 $status   = isset($input['status']) ? trim($input['status']) : null;
@@ -41,9 +32,15 @@ if (!isset($con) || !($con instanceof PDO)) {
 
 try {
     if ($order_id) {
-        // جلب طلب واحد — شامل العناصر والعنوان والكوبون (إن وجد)
+        // ====== IMPORTANT ======
+        // Make sure your DB table names are correct:
+        // I used `addresses` and `coupons` below because your code used them.
+        // If your tables are named `address` and `coupon` (singular), change them accordingly.
+        // =======================
         $stmt = $con->prepare("
-            SELECT o.*, a.address_title, a.city, a.street, a.phone as address_phone,
+            SELECT o.*,
+                   a.address_id, a.address_title, a.city AS address_city, a.street AS address_street,
+                   a.building_number, a.floor, a.apartment, a.latitude, a.longitude, a.phone AS address_phone,
                    c.coupon_name, c.coupon_discount
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
@@ -61,6 +58,23 @@ try {
         $it->execute([$order_id]);
         $items = $it->fetchAll(PDO::FETCH_ASSOC);
 
+        // جهز بيانات العنوان بصيغة موحدة (null إذا مش موجود)
+        $address = null;
+        if (!empty($order['address_id'])) {
+            $address = [
+                'address_id' => (int)$order['address_id'],
+                'title' => $order['address_title'] ?? null,
+                'city' => $order['address_city'] ?? null,
+                'street' => $order['address_street'] ?? null,
+                'building_number' => $order['building_number'] ?? null,
+                'floor' => $order['floor'] ?? null,
+                'apartment' => $order['apartment'] ?? null,
+                'latitude' => $order['latitude'] !== null ? (float)$order['latitude'] : null,
+                'longitude' => $order['longitude'] !== null ? (float)$order['longitude'] : null,
+                'phone' => $order['address_phone'] ?? null,
+            ];
+        }
+
         // بنبني الـ response
         $orderResponse = [
             'order_id' => (int)$order['order_id'],
@@ -74,12 +88,7 @@ try {
             'payment_status' => $order['payment_status'],
             'created_at' => $order['created_at'],
             'updated_at' => $order['updated_at'],
-            'address' => $order['address_line'] ? [
-                'address_line' => $order['address_line'],
-                'city' => $order['city'],
-                'area' => $order['area'],
-                'phone' => $order['address_phone'],
-            ] : null,
+            'address' => $address,
             'coupon' => $order['coupon_name'] ? [
                 'coupon_name' => $order['coupon_name'],
                 'coupon_discount' => $order['coupon_discount']
@@ -90,6 +99,7 @@ try {
         send_json(['status'=>'success','data'=>$orderResponse], 200);
     } else {
         // جلب قائمة الأوردرات للمستخدم مع إمكانية فلترة بالحالة
+        // NOTE: bind user_id and status only; safely inject integer limit/offset
         $params = [$user_id];
         $sql = "SELECT order_id, status, subtotal, discount_amount, shipping_amount, total_amount, payment_status, created_at FROM orders WHERE user_id = ?";
 
@@ -98,15 +108,13 @@ try {
             $params[] = $status;
         }
 
-        $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        $params[] = $limit;
-        $params[] = $offset;
+        // safe: inject integers directly (they were cast to int above)
+        $sql .= " ORDER BY created_at DESC LIMIT {$limit} OFFSET {$offset}";
 
         $stmt = $con->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // نُعيد ملخّص لكل أوردر
         $list = array_map(function($r){
             return [
                 'order_id' => (int)$r['order_id'],
