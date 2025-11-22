@@ -47,6 +47,7 @@ $platform = get_input('platform', $jsonInput);
 $cart_tier_raw = get_input('cart_tier', $jsonInput);
 $goods_sn = get_input("goods_sn", $jsonInput);
 $category_id = get_input("category_id", $jsonInput);
+$product_link = get_input("product_link", $jsonInput);
 
 // تعامُل مع attributes: ممكن تكون JSON-string أو array
 $cart_attributes = null;
@@ -115,9 +116,9 @@ try {
         }
     } else {
         $insertStmt = $con->prepare("INSERT INTO `cart`
-            (`cart_user_id`, `cart_product_id`, `cart_product_title`, `cart_product_image`, `cart_price`, `cart_quantity`, `cart_attributes`, `cart_platform`, `cart_available_quantity`, `cart_tier`, `goods_sn`, `category_id`)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $insertStmt->execute([$user_id, $product_id, $product_title, $product_image, $product_price, $cart_quantity, $cart_attributes_to_store, $platform, $cart_available_quantity, $cart_tier_to_store, $goods_sn, $category_id]);
+            (`cart_user_id`, `cart_product_id`, `cart_product_title`, `cart_product_image`, `cart_price`, `cart_quantity`, `cart_attributes`, `cart_platform`, `cart_available_quantity`, `cart_tier`, `goods_sn`, `category_id`, `product_link`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $insertStmt->execute([$user_id, $product_id, $product_title, $product_image, $product_price, $cart_quantity, $cart_attributes_to_store, $platform, $cart_available_quantity, $cart_tier_to_store, $goods_sn, $category_id , $product_link]);
         if ($insertStmt->rowCount() > 0) {
             echo json_encode(["status" => "success", "message" => "add"]);
         } else {
