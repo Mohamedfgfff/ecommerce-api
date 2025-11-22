@@ -1,13 +1,5 @@
 <?php
 // get_orders.php
-// Usage:
-//  GET  /get_orders.php?user_id=55&order_id=24
-//  GET  /get_orders.php?user_id=55&status=pending_approval
-//  GET  /get_orders.php?user_id=55
-// Or POST JSON: { "user_id":55, "order_id":24 } etc.
-//
-// Returns JSON: success + order(s) or error.
-
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
@@ -24,7 +16,6 @@ $raw = file_get_contents('php://input');
 $input = json_decode($raw, true);
 if (!is_array($input)) $input = $_GET + $_POST;
 
-// اقرأ المتغيرات
 $user_id  = isset($input['user_id']) ? intval($input['user_id']) : null;
 $order_id = isset($input['order_id']) ? intval($input['order_id']) : null;
 $status   = isset($input['status']) ? trim($input['status']) : null;
@@ -43,10 +34,12 @@ try {
     if ($order_id) {
         // جلب طلب واحد — شامل العناصر والعنوان والكوبون (إن وجد)
         $stmt = $con->prepare("
-            SELECT o.*, a.address_line, a.city, a.area, a.phone as address_phone,
+            SELECT o.*, 
+                   a.address_id, a.address_title, a.city AS address_city, a.street AS address_street,
+                   a.building_number, a.floor, a.apartment, a.latitude, a.longitude, a.phone AS address_phone,
                    c.coupon_name, c.coupon_discount
             FROM orders o
-            LEFT JOIN address a ON o.address_id = a.address_id
+            LEFT JOIN addresses a ON o.address_id = a.address_id
             LEFT JOIN coupon c ON o.coupon_id = c.coupon_id
             WHERE o.order_id = ? AND o.user_id = ? LIMIT 1
         ");
@@ -61,6 +54,23 @@ try {
         $it->execute([$order_id]);
         $items = $it->fetchAll(PDO::FETCH_ASSOC);
 
+        // جهز بيانات العنوان بصيغة موحدة (null إذا مش موجود)
+        $address = null;
+        if (!empty($order['address_id'])) {
+            $address = [
+                'address_id' => (int)$order['address_id'],
+                'title' => $order['address_title'] ?? null,
+                'city' => $order['address_city'] ?? null,
+                'street' => $order['address_street'] ?? null,
+                'building_number' => $order['building_number'] ?? null,
+                'floor' => $order['floor'] ?? null,
+                'apartment' => $order['apartment'] ?? null,
+                'latitude' => $order['latitude'] !== null ? (float)$order['latitude'] : null,
+                'longitude' => $order['longitude'] !== null ? (float)$order['longitude'] : null,
+                'phone' => $order['address_phone'] ?? null,
+            ];
+        }
+
         // بنبني الـ response
         $orderResponse = [
             'order_id' => (int)$order['order_id'],
@@ -74,12 +84,7 @@ try {
             'payment_status' => $order['payment_status'],
             'created_at' => $order['created_at'],
             'updated_at' => $order['updated_at'],
-            'address' => $order['address_line'] ? [
-                'address_line' => $order['address_line'],
-                'city' => $order['city'],
-                'area' => $order['area'],
-                'phone' => $order['address_phone'],
-            ] : null,
+            'address' => $address,
             'coupon' => $order['coupon_name'] ? [
                 'coupon_name' => $order['coupon_name'],
                 'coupon_discount' => $order['coupon_discount']
@@ -106,7 +111,6 @@ try {
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // نُعيد ملخّص لكل أوردر
         $list = array_map(function($r){
             return [
                 'order_id' => (int)$r['order_id'],
