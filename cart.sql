@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 22, 2025 at 04:28 PM
+-- Generation Time: Nov 22, 2025 at 04:58 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -38,7 +38,7 @@ CREATE TABLE `cart` (
   `cart_updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `cart_product_title` varchar(255) NOT NULL,
   `cart_product_image` varchar(255) DEFAULT NULL,
-  `cart_price` varchar(100) NOT NULL,
+  `cart_price` decimal(10,2) NOT NULL,
   `cart_platform` varchar(100) NOT NULL,
   `cart_tier` varchar(255) DEFAULT NULL,
   `category_id` varchar(100) DEFAULT NULL,
