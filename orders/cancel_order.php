@@ -1,10 +1,5 @@
 <?php
-// cancel_order.php - إلغاء الطلب
-// POST JSON:
-// {
-//   "user_id": 55,
-//   "order_id": 123
-// }
+
 
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
@@ -12,7 +7,8 @@ error_reporting(E_ALL);
 
 include_once "../connect.php"; // يجب أن يعرّف $con كـ PDO
 
-function send_json($payload, $httpCode = 200) {
+function send_json($payload, $httpCode = 200)
+{
     http_response_code($httpCode);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
@@ -66,7 +62,7 @@ try {
 
     // التحقق من الحالة: يجب أن تكون pending_approval أو approved فقط
     $allowedStatuses = ['pending_approval', 'approved'];
-    
+
     if (!in_array($currentStatus, $allowedStatuses)) {
         send_json([
             'status' => 'error',
@@ -104,7 +100,6 @@ try {
             'cancelled_at' => date('Y-m-d H:i:s')
         ]
     ], 200);
-
 } catch (PDOException $e) {
     send_json([
         'status' => 'error',
