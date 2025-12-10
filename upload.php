@@ -41,13 +41,25 @@ if (isset($_FILES[$fileRequest])) {
 
     if (move_uploaded_file($filetmp, $targetPath)) {
         // Build URL
-        // Assuming typical setup: http://server/ecommerce/upload/filename
-        // We can't easily auto-detect full URL accurately without config, but we can return relative path or try.
-        // User asked "returns link to image". I will return the filename and the relative path.
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        // Handle load balancers/proxies (like Railway often uses)
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+        }
+
+        $host = $_SERVER['HTTP_HOST'];
+
+        // Ensure we handle subdirectories if the script isn't at root, 
+        // but current setup seems to be root based on previous context.
+        // We will assume root for simplicity or try to detect script dir.
+        // Given existing code, $uploadDir is relative "upload/", so we append that.
+
+        $fullUrl = "$protocol://$host/upload/" . $newFilename;
+
         echo json_encode(array(
             "status" => "success",
             "image" => $newFilename,
-            "url" => "upload/" . $newFilename
+            "url" => $fullUrl
         ));
     } else {
         echo json_encode(array("status" => "fail", "message" => "Upload failed"));
