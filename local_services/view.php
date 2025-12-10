@@ -8,7 +8,7 @@ $page = filterRequest("page");
 $pagesize = filterRequest("pagesize");
 
 if (empty($page)) $page = 1;
-if (empty($pagesize)) $pagesize = 10;
+if (empty($pagesize)) $pagesize = 20;
 
 $offset = ($page - 1) * $pagesize;
 
