@@ -20,11 +20,14 @@ if (isset($_FILES[$fileRequest])) {
     // Generate new name to prevent overwriting
     $newFilename = uniqid() . "." . $ext;
 
-    $uploadDir = "upload/";
-    // If we are in root, upload/ is correct. 
-    // If included from elsewhere, we might need absolute path. 
-    // Ideally use __DIR__ . '/upload/'
-    $targetPath = __DIR__ . "/upload/" . $newFilename;
+    $uploadDir = __DIR__ . "/upload/";
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    } else {
+        chmod($uploadDir, 0777);
+    }
+
+    $targetPath = $uploadDir . $newFilename;
 
     if (!empty($filename) && !in_array($ext, $allowExt)) {
         echo json_encode(array("status" => "fail", "message" => "Extension not allowed"));
