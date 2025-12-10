@@ -5,16 +5,17 @@ define("MB", 1048576);
 
 function filterRequest($requestname)
 {
-  if (isset($_POST[$requestname])) {
-    return htmlspecialchars(strip_tags($_POST[$requestname]));
-  }
-  return null;
+    if (isset($_POST[$requestname])) {
+        return htmlspecialchars(strip_tags($_POST[$requestname]));
+    }
+    return null;
 }
 
 // functions.php
 
 // دالة جديدة لاستقبال نصوص JSON كما هي
-function jsonrequest($requestname, $default = null) {
+function jsonrequest($requestname, $default = null)
+{
     return $_POST[$requestname] ?? $default;
 }
 
@@ -22,15 +23,15 @@ function getAllData($table, $where = null, $values = null)
 {
     global $con;
     $data = array();
-    if($where==null){
-    $stmt = $con->prepare("SELECT  * FROM $table");
-    }else{
-    $stmt = $con->prepare("SELECT  * FROM $table WHERE   $where ");
+    if ($where == null) {
+        $stmt = $con->prepare("SELECT  * FROM $table");
+    } else {
+        $stmt = $con->prepare("SELECT  * FROM $table WHERE   $where ");
     }
     $stmt->execute($values);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $count  = $stmt->rowCount();
-    if ($count > 0){
+    if ($count > 0) {
         echo json_encode(array("status" => "success", "data" => $data));
     } else {
         echo json_encode(array("status" => "failure"));
@@ -54,12 +55,12 @@ function insertData($table, $data, $json = true)
     $stmt->execute();
     $count = $stmt->rowCount();
     if ($json == true) {
-    if ($count > 0) {
-        echo json_encode(array("status" => "success"));
-    } else {
-        echo json_encode(array("status" => "failure"));
+        if ($count > 0) {
+            echo json_encode(array("status" => "success"));
+        } else {
+            echo json_encode(array("status" => "failure"));
+        }
     }
-  }
     return $count;
 }
 
@@ -80,11 +81,11 @@ function updateData($table, $data, $where, $json = true)
     $stmt->execute($vals);
     $count = $stmt->rowCount();
     if ($json == true) {
-    if ($count > 0) {
-        echo json_encode(array("status" => "success"));
-    } else {
-        echo json_encode(array("status" => "failure"));
-    }
+        if ($count > 0) {
+            echo json_encode(array("status" => "success"));
+        } else {
+            echo json_encode(array("status" => "failure"));
+        }
     }
     return $count;
 }
@@ -107,27 +108,35 @@ function deleteData($table, $where, $json = true)
 
 function imageUpload($imageRequest)
 {
-  global $msgError;
-  $imagename  = rand(1000, 10000) . $_FILES[$imageRequest]['name'];
-  $imagetmp   = $_FILES[$imageRequest]['tmp_name'];
-  $imagesize  = $_FILES[$imageRequest]['size'];
-  $allowExt   = array("jpg", "png", "gif", "mp3", "pdf");
-  $strToArray = explode(".", $imagename);
-  $ext        = end($strToArray);
-  $ext        = strtolower($ext);
+    global $msgError;
+    $imagename  = rand(1000, 10000) . $_FILES[$imageRequest]['name'];
+    $imagetmp   = $_FILES[$imageRequest]['tmp_name'];
+    $imagesize  = $_FILES[$imageRequest]['size'];
+    $allowExt   = array("jpg", "png", "gif", "mp3", "pdf", "doc", "docx");
+    $strToArray = explode(".", $imagename);
+    $ext        = end($strToArray);
+    $ext        = strtolower($ext);
 
-  if (!empty($imagename) && !in_array($ext, $allowExt)) {
-    $msgError = "EXT";
-  }
-  if ($imagesize > 2 * MB) {
-    $msgError = "size";
-  }
-  if (empty($msgError)) {
-    move_uploaded_file($imagetmp,  "../upload/" . $imagename);
-    return $imagename;
-  } else {
-    return "fail";
-  }
+    if (!empty($imagename) && !in_array($ext, $allowExt)) {
+        $msgError = "EXT";
+    }
+    if ($imagesize > 10 * MB) { // Increased limit
+        $msgError = "size";
+    }
+
+    $uploadDir = __DIR__ . "/upload/";
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    } else {
+        chmod($uploadDir, 0777);
+    }
+
+    if (empty($msgError)) {
+        move_uploaded_file($imagetmp,  $uploadDir . $imagename);
+        return $imagename;
+    } else {
+        return "fail";
+    }
 }
 
 
@@ -155,22 +164,24 @@ function checkAuthenticate()
     // End 
 }
 
-   function printjeson($masege){
-    echo json_encode(array("status" => "fail", "message" =>$masege));
-
+function printjeson($masege)
+{
+    echo json_encode(array("status" => "fail", "message" => $masege));
 }
 
 
 
 
-function sendEmail($to,$title,$body){
+function sendEmail($to, $title, $body)
+{
     $header = "From: support@mohamed.com " . "\n" . "CC: mh6285436@gmail.com";
-mail($to, $title, $body, $header);
+    mail($to, $title, $body, $header);
 }
 
-function sendEmaildepage($verifycode,$email,$username){
+function sendEmaildepage($verifycode, $email, $username)
+{
     // $apiKey = "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";
-$apiKey = $_ENV['SENDINBLUE_API_KEY'] ?? '';
+    $apiKey = $_ENV['SENDINBLUE_API_KEY'] ?? '';
     $postData = array(
         "sender" => array("name" => "Ecommerce App", "email" => "mh6285436@gmail.com"),
         "to" => array(
@@ -193,7 +204,6 @@ $apiKey = $_ENV['SENDINBLUE_API_KEY'] ?? '';
 
     $response = curl_exec($ch);
     curl_close($ch);
-   
 }
 
 
