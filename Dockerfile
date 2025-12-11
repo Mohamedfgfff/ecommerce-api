@@ -14,4 +14,4 @@ RUN docker-php-ext-install pdo pdo_mysql
 RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 
 # تشغيل Apache
-CMD ["apache2-foreground"]
+# CMD ["apache2-foreground"]
