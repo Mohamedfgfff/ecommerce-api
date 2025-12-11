@@ -7,7 +7,8 @@ WORKDIR /var/www/html
 # تعطيل أي MPM ممكن يكون مفعّل، وتفعيل mpm_prefork (مناسب مع mod_php)
 # ثم تفعيل إعادة كتابة الروابط (rewrite)
 RUN a2dismod mpm_event || true \
-    && a2enmod mpm_prefork || true \
+    && a2dismod mpm_worker || true \
+    && a2enmod mpm_prefork \
     && a2enmod rewrite
 
 # نسخ الكود للسيرفر
