@@ -1,7 +1,7 @@
 <?php
 include "../connect.php";
 
-$search = filterRequest("search");
+$search = filterRequestSearch("search");
 
 // Search by name or description
 $stmt = $con->prepare("SELECT * FROM local_services WHERE service_name LIKE ? OR service_desc LIKE ?");

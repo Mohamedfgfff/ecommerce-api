@@ -10,6 +10,18 @@ function filterRequest($requestname)
     }
     return null;
 }
+function filterRequestSearch($requestname)
+{
+    if (isset($_POST[$requestname])) {
+        $value = trim($_POST[$requestname]);
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            $value = mb_convert_encoding($value, 'UTF-8', 'auto');
+        }
+        // إذا كنت تريد حماية من XSS، استخدم htmlspecialchars مع تحديد charset
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+    return '';
+}
 
 // functions.php
 
