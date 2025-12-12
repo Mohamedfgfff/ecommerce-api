@@ -4,8 +4,6 @@ include "../../connect.php";
 $userid    = filterRequest("userid");
 $serviceid = filterRequest("serviceid");
 $note      = filterRequest("note");
-$lat       = filterRequest("lat"); // Deprecated
-$lng       = filterRequest("lng"); // Deprecated
 $addressid = filterRequest("addressid"); // New
 
 $data = array(
