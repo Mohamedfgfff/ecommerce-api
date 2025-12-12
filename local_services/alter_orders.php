@@ -9,6 +9,15 @@ try {
     // Usually better to leave columns but make them nullable if we want safety, or drop them if we are sure.
     // Given the user request "replace", I'll drop them to be clean, or at least ensure the new column is there.
 
+    // Change order_status to VARCHAR
+    $con->exec("ALTER TABLE orders_services MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'pending'");
+
+    // Update old INT status to String status
+    $con->exec("UPDATE orders_services SET order_status = 'pending' WHERE order_status = '0'");
+    $con->exec("UPDATE orders_services SET order_status = 'approved' WHERE order_status = '1'");
+    $con->exec("UPDATE orders_services SET order_status = 'declined' WHERE order_status = '2'");
+    // Ensure any NULLs or weird values default to pending if needed, or leave as is.
+
     // $con->exec("ALTER TABLE orders_services DROP COLUMN order_lat");
     // $con->exec("ALTER TABLE orders_services DROP COLUMN order_lng");
 

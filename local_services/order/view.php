@@ -8,16 +8,28 @@ try {
         exit;
     }
 
+    $state = filterRequest("state"); // Optional state filter
+
     // Join with local_services to get service name/image
     $stmt = $con->prepare("
         SELECT orders_services.*, local_services.service_name, local_services.service_image, local_services.service_city 
         FROM orders_services 
         INNER JOIN local_services ON orders_services.order_service_id = local_services.service_id
         WHERE orders_services.order_user_id = ?
-        ORDER BY orders_services.orders_services_id DESC
     ");
 
-    $stmt->execute(array($userid));
+    if (!empty($state)) {
+        $stmt = $con->prepare("
+            SELECT orders_services.*, local_services.service_name, local_services.service_image, local_services.service_city 
+            FROM orders_services 
+            INNER JOIN local_services ON orders_services.order_service_id = local_services.service_id
+            WHERE orders_services.order_user_id = ? AND orders_services.order_status = ?
+            ORDER BY orders_services.orders_services_id DESC
+        ");
+        $stmt->execute(array($userid, $state));
+    } else {
+        $stmt->execute(array($userid));
+    }
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $count = $stmt->rowCount();
 

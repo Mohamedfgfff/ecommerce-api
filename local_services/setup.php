@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS orders_services (
     orders_services_id INT AUTO_INCREMENT PRIMARY KEY,
     order_user_id INT NOT NULL,
     order_service_id INT NOT NULL,
-    order_status INT DEFAULT 0 COMMENT '0: Pending, 1: Approved, 2: Declined',
+    order_status VARCHAR(50) DEFAULT 'pending' COMMENT 'pending, approved, declined, completed, cancelled',
     order_note TEXT,
     order_address_id INT NOT NULL,
     order_create_at DATETIME DEFAULT CURRENT_TIMESTAMP,
