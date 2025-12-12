@@ -3,6 +3,10 @@ include "../../connect.php";
 
 try {
     $userid = filterRequest("userid");
+    if (empty($userid)) {
+        echo json_encode(array("status" => "failure", "message" => "userid is required"));
+        exit;
+    }
 
     // Join with local_services to get service name/image
     $stmt = $con->prepare("
