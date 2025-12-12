@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 12, 2025 at 11:21 AM
+-- Generation Time: Dec 11, 2025 at 01:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -27,7 +27,6 @@ SET time_zone = "+00:00";
 -- Table structure for table `addresses`
 --
 
-DROP TABLE IF EXISTS `addresses`;
 CREATE TABLE `addresses` (
   `address_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -50,7 +49,6 @@ CREATE TABLE `addresses` (
 -- Table structure for table `admins`
 --
 
-DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
   `admin_id` int(11) NOT NULL,
   `admin_name` varchar(100) NOT NULL,
@@ -66,17 +64,23 @@ CREATE TABLE `admins` (
 -- Table structure for table `cart`
 --
 
-DROP TABLE IF EXISTS `cart`;
 CREATE TABLE `cart` (
   `cart_id` int(11) NOT NULL,
   `cart_user_id` int(11) NOT NULL,
-  `cart_product_id` int(11) NOT NULL,
-  `cart_attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`cart_attributes`)),
-  `cart_attributes_hash` varchar(64) NOT NULL,
+  `cart_product_id` varchar(100) NOT NULL,
+  `cart_attributes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `cart_available_quantity` int(11) NOT NULL DEFAULT 0,
   `cart_quantity` int(11) NOT NULL DEFAULT 1,
   `cart_created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `cart_updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `cart_updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `cart_product_title` varchar(255) NOT NULL,
+  `cart_product_image` varchar(255) DEFAULT NULL,
+  `cart_price` decimal(10,2) NOT NULL,
+  `cart_platform` varchar(100) NOT NULL,
+  `cart_tier` varchar(255) DEFAULT NULL,
+  `category_id` varchar(100) DEFAULT NULL,
+  `goods_sn` varchar(100) DEFAULT NULL,
+  `product_link` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -85,7 +89,6 @@ CREATE TABLE `cart` (
 -- Table structure for table `chats`
 --
 
-DROP TABLE IF EXISTS `chats`;
 CREATE TABLE `chats` (
   `id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
@@ -106,13 +109,28 @@ CREATE TABLE `chats` (
 -- Table structure for table `coupons`
 --
 
-DROP TABLE IF EXISTS `coupons`;
 CREATE TABLE `coupons` (
   `coupon_id` int(11) NOT NULL,
   `coupon_name` varchar(100) NOT NULL,
   `coupon_platfrom` varchar(50) NOT NULL,
-  `coupon_discount` smallint(6) NOT NULL DEFAULT 0,
-  `coupon_expired` datetime NOT NULL
+  `coupon_discount` double NOT NULL DEFAULT 0,
+  `coupon_expired` datetime NOT NULL,
+  `usage_limit` int(11) NOT NULL,
+  `is_active` smallint(6) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `coupon_usages`
+--
+
+CREATE TABLE `coupon_usages` (
+  `id` int(11) NOT NULL,
+  `coupon_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `used_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- --------------------------------------------------------
@@ -121,17 +139,16 @@ CREATE TABLE `coupons` (
 -- Table structure for table `favorites`
 --
 
-DROP TABLE IF EXISTS `favorites`;
 CREATE TABLE `favorites` (
   `favorite_id` int(11) NOT NULL,
   `favorite_user_id` int(11) NOT NULL,
   `favorite_product_id` varchar(100) NOT NULL,
   `product_title` varchar(255) NOT NULL,
   `product_image` varchar(500) NOT NULL,
-  `product_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `product_price` varchar(50) NOT NULL DEFAULT '0.00',
   `favorite_platform` varchar(50) NOT NULL,
   `goods_sn` varchar(100) DEFAULT NULL,
-  `category_id` int(11) DEFAULT NULL,
+  `category_id` varchar(255) DEFAULT NULL,
   `favorite_created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -141,7 +158,6 @@ CREATE TABLE `favorites` (
 -- Table structure for table `messages`
 --
 
-DROP TABLE IF EXISTS `messages`;
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL,
   `chat_id` int(11) DEFAULT NULL,
@@ -167,7 +183,6 @@ CREATE TABLE `messages` (
 -- Table structure for table `notifications`
 --
 
-DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL,
   `target_user_id` int(11) DEFAULT NULL,
@@ -183,10 +198,70 @@ CREATE TABLE `notifications` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `orders`
+--
+
+CREATE TABLE `orders` (
+  `order_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `coupon_id` int(11) DEFAULT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `shipping_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `payment_status` varchar(30) DEFAULT 'pending',
+  `status` varchar(30) NOT NULL DEFAULT 'pending_approval',
+  `admin_id` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `address_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `item_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `product_id` varchar(100) NOT NULL,
+  `product_platform` varchar(100) NOT NULL,
+  `product_title` varchar(255) NOT NULL,
+  `product_link` varchar(255) NOT NULL,
+  `product_image` varchar(255) NOT NULL,
+  `product_price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `attributes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `payment_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `provider` varchar(100) DEFAULT NULL,
+  `provider_payment_id` varchar(255) DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` varchar(30) NOT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `search_cash`
 --
 
-DROP TABLE IF EXISTS `search_cash`;
 CREATE TABLE `search_cash` (
   `id` int(11) NOT NULL,
   `query` varchar(255) NOT NULL,
@@ -202,7 +277,6 @@ CREATE TABLE `search_cash` (
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `user_name` varchar(100) NOT NULL,
@@ -237,7 +311,6 @@ ALTER TABLE `admins`
 --
 ALTER TABLE `cart`
   ADD PRIMARY KEY (`cart_id`),
-  ADD UNIQUE KEY `uniq_user_product_attrs_hash` (`cart_user_id`,`cart_product_id`,`cart_attributes_hash`),
   ADD KEY `idx_cart_user` (`cart_user_id`),
   ADD KEY `idx_cart_product` (`cart_product_id`);
 
@@ -252,6 +325,14 @@ ALTER TABLE `chats`
 --
 ALTER TABLE `coupons`
   ADD PRIMARY KEY (`coupon_id`);
+
+--
+-- Indexes for table `coupon_usages`
+--
+ALTER TABLE `coupon_usages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `coupon_id` (`coupon_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `favorites`
@@ -277,6 +358,29 @@ ALTER TABLE `messages`
 --
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`order_id`),
+  ADD KEY `coupon_id` (`coupon_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `address_id` (`address_id`);
+
+--
+-- Indexes for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD PRIMARY KEY (`item_id`),
+  ADD KEY `order_id` (`order_id`);
+
+--
+-- Indexes for table `payments`
+--
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`payment_id`),
+  ADD KEY `order_id` (`order_id`);
 
 --
 -- Indexes for table `search_cash`
@@ -328,6 +432,12 @@ ALTER TABLE `coupons`
   MODIFY `coupon_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `coupon_usages`
+--
+ALTER TABLE `coupon_usages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `favorites`
 --
 ALTER TABLE `favorites`
@@ -344,6 +454,24 @@ ALTER TABLE `messages`
 --
 ALTER TABLE `notifications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `order_items`
+--
+ALTER TABLE `order_items`
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `search_cash`
@@ -374,10 +502,37 @@ ALTER TABLE `cart`
   ADD CONSTRAINT `fk_cart_user` FOREIGN KEY (`cart_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `coupon_usages`
+--
+ALTER TABLE `coupon_usages`
+  ADD CONSTRAINT `coupon_usages_ibfk_1` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`coupon_id`),
+  ADD CONSTRAINT `coupon_usages_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
 -- Constraints for table `favorites`
 --
 ALTER TABLE `favorites`
   ADD CONSTRAINT `fk_favorites_user` FOREIGN KEY (`favorite_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`coupon_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`address_id`) REFERENCES `addresses` (`address_id`);
+
+--
+-- Constraints for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `payments`
+--
+ALTER TABLE `payments`
+  ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
