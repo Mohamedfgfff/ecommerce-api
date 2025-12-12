@@ -16,7 +16,11 @@ RUN docker-php-ext-install pdo pdo_mysql
 
 # ضبط صلاحيات المجلدات لتكون قابلة للكتابة من قبل Apache user
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+    && chmod -R 755 /var/www/html \
+    # Fix MPM Conflicts: Disable all, then enable prefork
+    && a2dismod mpm_event mpm_worker || true \
+    && rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
+    && a2enmod mpm_prefork
 
 # تحديث Apache للاستماع إلى المنفذ المحدد من قبل Railway (Environment Variable PORT)
 # إذا لم يتم تحديد PORT، سيتم استخدام المنفذ 80 كاحتياطي
