@@ -3,7 +3,12 @@ include "../connect.php";
 
 try {
     // Add order_address_id
-    $con->exec("ALTER TABLE orders_services ADD COLUMN order_address_id INT NOT NULL AFTER order_note");
+    // Add order_address_id
+    try {
+        $con->exec("ALTER TABLE orders_services ADD COLUMN order_address_id INT NOT NULL AFTER order_note");
+    } catch (PDOException $e) {
+        // Ignore if column already exists or other error, proceed to next steps
+    }
 
     // Check if lat/lng exist and drop them? Or just leave them for safety? 
     // Usually better to leave columns but make them nullable if we want safety, or drop them if we are sure.
