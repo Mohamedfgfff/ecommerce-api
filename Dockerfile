@@ -6,7 +6,7 @@ WORKDIR /var/www/html
 
 # تعطيل أي MPM تعارض، وتفعيل mpm_prefork
 # نحن نقوم بحذف ملفات الضبط يدوياً للتأكد من عدم تحميل أكثر من MPM
-RUN a2dismod mpm_event mpm_worker || true \
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
     && a2enmod mpm_prefork \
     && a2enmod rewrite
 
