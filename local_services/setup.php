@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS orders_services (
     order_service_id INT NOT NULL,
     order_status INT DEFAULT 0 COMMENT '0: Pending, 1: Approved, 2: Declined',
     order_note TEXT,
-    order_lat DOUBLE,
-    order_lng DOUBLE,
+    order_address_id INT NOT NULL,
     order_create_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (order_service_id) REFERENCES local_services(service_id) ON DELETE CASCADE
