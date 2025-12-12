@@ -6,9 +6,7 @@ WORKDIR /var/www/html
 
 # تعطيل أي MPM تعارض، وتفعيل mpm_prefork فقط
 # نستخدم a2dismod لتعطيل MPM الأخرى بشكل آمن
-RUN a2dismod mpm_event mpm_worker \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
+RUN a2enmod rewrite
 
 # نسخ الكود للسيرفر
 COPY . /var/www/html
