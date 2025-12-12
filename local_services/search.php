@@ -10,13 +10,28 @@ if (empty($search)) {
     exit;
 }
 
-// تقسيم الجملة إلى كلمات
+// أولًا: جرب البحث بالجملة الكاملة
+$stmt = $con->prepare("
+    SELECT * FROM local_services 
+    WHERE service_name LIKE ? OR service_desc LIKE ?
+");
+$searchValue = "%{$search}%";
+$stmt->execute([$searchValue, $searchValue]);
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$count = $stmt->rowCount();
+
+if ($count > 0) {
+    echo json_encode(array("status" => "success", "data" => $data));
+    exit;
+}
+
+// ثانيًا: تقسيم الجملة إلى كلمات
 $allWords = explode(' ', $search);
 
 // تصفية الكلمات: نحتفظ فقط بالكلمات التي طولها >= 2 حرف
 $words = array_filter($allWords, function ($word) {
     $word = trim($word);
-    return strlen($word) >= 2; // ≥ 2 أحرف (يمكنك تغييرها إلى 3 إذا أردت)
+    return strlen($word) >= 2;
 });
 
 // إذا لم تبقَ أي كلمة قابلة للبحث
@@ -25,6 +40,7 @@ if (empty($words)) {
     exit;
 }
 
+// ثالثًا: ابحث بكل كلمة منفصلة
 $conditions = [];
 foreach ($words as $word) {
     $conditions[] = "(service_name LIKE ? OR service_desc LIKE ?)";
@@ -42,16 +58,36 @@ foreach ($words as $word) {
     $params[] = "%{$word}%";
 }
 
-try {
-    $stmt->execute($params);
+$stmt->execute($params);
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$count = $stmt->rowCount();
+
+if ($count > 0) {
+    echo json_encode(array("status" => "success", "data" => $data));
+    exit;
+}
+
+// رابعًا: إذا فشل كل شيء، جرب البحث بأي جزء من الكلمة (مثل: "ورش" → ابحث عن "رش")
+// نستخدم تقنية "substring search" - نبحث عن أي جزء من النص
+
+// نأخذ أول 2 أحرف من البحث (إن وجدت) ونبحث بها
+if (strlen($search) >= 2) {
+    $subSearch = substr($search, 0, 2); // أول حرفين
+    $stmt = $con->prepare("
+        SELECT * FROM local_services 
+        WHERE service_name LIKE ? OR service_desc LIKE ?
+    ");
+    $searchValue = "%{$subSearch}%";
+    $stmt->execute([$searchValue, $searchValue]);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $count = $stmt->rowCount();
 
     if ($count > 0) {
         echo json_encode(array("status" => "success", "data" => $data));
-    } else {
-        echo json_encode(array("status" => "failure", "message" => "No results found"));
+        exit;
     }
-} catch (PDOException $e) {
-    echo json_encode(array("status" => "error", "message" => "Query failed"));
 }
+
+
+// إذا لم ينجح أي شيء
+echo json_encode(array("status" => "failure", "message" => "No results found"));
