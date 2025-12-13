@@ -22,16 +22,16 @@ try {
             local_services.service_phone AS service_contact_phone,
             users.user_name,
             users.user_email,
-            users.user_phone AS user_personal_phone,
+            users.user_phone,
             addresses.address_title,
-            addresses.city AS address_city,
-            addresses.street AS address_street,
+            addresses.city,
+            addresses.street,
             addresses.building_number,
             addresses.floor,
             addresses.apartment,
             addresses.latitude,
             addresses.longitude,
-            addresses.phone AS address_contact_phone
+            addresses.phone
         FROM orders_services 
         INNER JOIN local_services ON orders_services.order_service_id = local_services.service_id
         INNER JOIN users ON orders_services.order_user_id = users.user_id
