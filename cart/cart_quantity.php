@@ -1,110 +1,120 @@
 <?php
-// secure_cart_check.php
+
+/**
+ * cart_quantity.php
+ * Checks the current quantity of a product in the user's cart and its favorite status.
+ */
 
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// اجعل الـ includes لا يطبعوا شيء (نلتقط أي إخراج غير مقصود)
+// Buffer to catch any accidental output from included files to prevent JSON corruption
 ob_start();
 include_once "../connect.php";
 include_once "../functions.php";
-$extra = ob_get_clean();
-if (!empty($extra)) {
-    file_put_contents(__DIR__ . '/debug_extra_output.log', date('c') . " - EXTRA OUTPUT:\n" . $extra . "\n\n", FILE_APPEND);
-    // لا نطبع الـ $extra حتى لا نكسر JSON
+$unintended_output = ob_get_clean();
+
+// Log unintended output if any exists
+if (!empty($unintended_output)) {
+    $log_message = "[" . date('Y-m-d H:i:s') . "] EXTRA OUTPUT:\n" . $unintended_output . "\n---\n";
+    file_put_contents(__DIR__ . '/debug_extra_output.log', $log_message, FILE_APPEND);
 }
 
-// اقرأ خام الـ request (نقبل JSON أو form data)
-$raw = file_get_contents('php://input');
-$jsonInput = null;
-if ($raw !== false && $raw !== '') {
-    $jsonInput = json_decode($raw, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        $jsonInput = null; // لو مش JSON صالح نتجاهل
-    }
+/**
+ * Sends a standardized JSON response and terminates execution.
+ * 
+ * @param string $status  "success" or "fail"
+ * @param array  $data    Optional data to include in the response
+ * @param string $message Optional message describing the status
+ */
+function send_response($status, $data = [], $message = null)
+{
+    if (ob_get_length()) ob_clean(); // Discard any buffered output
+
+    $response = ["status" => $status];
+    if ($message !== null) $response["message"] = $message;
+    if (!empty($data)) $response = array_merge($response, $data);
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+    exit;
 }
 
-// دالة مساعدة: ترجع من JSON أولًا ثم من filterrequest() ثم من $_POST/$_REQUEST
-function get_input($key, $jsonInput) {
-    if (is_array($jsonInput) && array_key_exists($key, $jsonInput)) return $jsonInput[$key];
-    if (function_exists('filterrequest')) {
-        $v = filterrequest($key);
-        if ($v !== null && $v !== '') return $v;
-    }
-    if (isset($_POST[$key])) return $_POST[$key];
+// Input Retrieval (Supports JSON raw body, $_POST, and $_GET)
+$json_raw = file_get_contents('php://input');
+$json_data = json_decode($json_raw, true) ?? [];
+
+/**
+ * Helper to fetch input values from various sources.
+ */
+function get_input_field($key, $json_data)
+{
+    if (isset($json_data[$key])) return $json_data[$key];
+    if (isset($_POST[$key]))    return $_POST[$key];
     if (isset($_REQUEST[$key])) return $_REQUEST[$key];
     return null;
 }
 
-// اقرأ الحقول المطلوبة
-$user_id    = get_input('user_id', $jsonInput);
-$product_id = get_input('product_id', $jsonInput);
-$attributes_raw = get_input('attributes', $jsonInput);
+// 1. Collect and Validate Required Fields
+$user_id    = get_input_field('user_id', $json_data);
+$product_id = get_input_field('product_id', $json_data);
+$attr_input = get_input_field('attributes', $json_data);
 
-// تعامل مع attributes: قد تكون JSON-string أو مصفوفة
-$attributes = null;
-if (is_array($attributes_raw)) {
-    $attributes = $attributes_raw;
-} elseif (is_string($attributes_raw) && $attributes_raw !== '') {
-    $decoded = json_decode($attributes_raw, true);
-    if (json_last_error() === JSON_ERROR_NONE) $attributes = $decoded;
-    else $attributes = $attributes_raw; // نخزنها كنص لو مو JSON
+if (empty($user_id) || empty($product_id) || ($attr_input === null || $attr_input === '')) {
+    send_response("fail", [], "Missing required fields: user_id, product_id, and attributes are required.");
 }
 
-// تحقق من الحقول المطلوبة
-if (empty($user_id) || empty($product_id) || ($attributes === null || $attributes === '')) {
-    // لا نطبع شيء آخر — فقط JSON
-    echo json_encode(["status" => "fail", "message" => "Missing required fields"], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// تأكد من وجود اتصال DB صالح
+// 2. Database Connection Check
 if (!isset($con) || !($con instanceof PDO)) {
-    file_put_contents(__DIR__ . '/debug_sql_errors.log', date('c') . " - DB connection missing or invalid\n", FILE_APPEND);
-    echo json_encode(["status" => "fail", "message" => "Server error"], JSON_UNESCAPED_UNICODE);
-    exit;
+    send_response("fail", [], "Database connection is unavailable.");
 }
 
-// إذا attributes مصفوفة، خزّنها كسلسلة JSON للمقارنة في WHERE
-$attributes_to_check = is_array($attributes) ? json_encode($attributes, JSON_UNESCAPED_UNICODE) : $attributes;
+// 3. Prepare Attributes for Query
+// If attributes is an array, encode it to JSON string for database matching
+$attributes_for_query = is_array($attr_input) ? json_encode($attr_input, JSON_UNESCAPED_UNICODE) : $attr_input;
 
 try {
-    $stmt = $con->prepare("
+    /**
+     * Optimized query to fetch:
+     * - cart_quantity: Current count in user's cart (returns null if not found)
+     * - in_favorite: Boolean existence in favorites table
+     */
+    $sql = "
         SELECT 
             (SELECT `cart_quantity` 
              FROM `cart` 
-             WHERE `cart_user_id` = ? 
-             AND `cart_product_id` = ? 
-             AND `cart_attributes` = ? 
+             WHERE `cart_user_id` = :uid 
+             AND `cart_product_id` = :pid 
+             AND `cart_attributes` = :attr 
              LIMIT 1) AS cart_quantity, 
-        EXISTS(
+            EXISTS(
              SELECT 1 
              FROM `favorites` 
-             WHERE `favorite_user_id` = ? 
-             AND `favorite_product_id` = ?) AS in_favorite
-    ");
+             WHERE `favorite_user_id` = :uid 
+             AND `favorite_product_id` = :pid) AS in_favorite
+    ";
 
-    $stmt->execute([$user_id, $product_id, $attributes_to_check, $user_id, $product_id]);
+    $stmt = $con->prepare($sql);
+    $stmt->execute([
+        ':uid'  => $user_id,
+        ':pid'  => $product_id,
+        ':attr' => $attributes_for_query
+    ]);
 
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $quantity    = (int)($result['cart_quantity'] ?? 0);
-    $in_favorite = (bool)($result['in_favorite'] ?? false);
+    // Cast results to appropriate types
+    $quantity    = isset($row['cart_quantity']) ? (int)$row['cart_quantity'] : 0;
+    $in_favorite = isset($row['in_favorite'])   ? (bool)$row['in_favorite']   : false;
 
-    echo json_encode([
-        "status" => "success",
+    send_response("success", [
         "cart_quantity" => $quantity,
-        "in_favorite" => $in_favorite
-    ], JSON_UNESCAPED_UNICODE);
-
+        "in_favorite"   => $in_favorite
+    ]);
 } catch (PDOException $e) {
-    // مؤقتا فقط أثناء التصحيح: عرض رسالة الخطأ الحقيقية
-    if (ob_get_length()) ob_clean();
-    echo json_encode([
-        "status" => "fail",
-        "message" => "Server error",
-        "error" => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
+    // Log the error for internal tracking
+    error_log("Database Error in cart_quantity.php: " . $e->getMessage());
+
+    // Provide a generic fail message to the client, but include error details if in debug mode
+    send_response("fail", ["error" => $e->getMessage()], "A database error occurred.");
 }
