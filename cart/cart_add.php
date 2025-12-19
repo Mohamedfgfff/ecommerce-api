@@ -18,7 +18,8 @@ if ($raw !== '' && $raw !== false) {
 }
 
 // مساعدة: ترجع قيمة من JSON أولاً، ثم من $_POST/$_REQUEST عبر filterrequest()
-function get_input($key, $jsonInput) {
+function get_input($key, $jsonInput)
+{
     // إذا JSON موجود وخانة موجودة
     if (is_array($jsonInput) && array_key_exists($key, $jsonInput)) {
         return $jsonInput[$key];
@@ -75,7 +76,7 @@ if (is_array($cart_tier_raw)) {
 }
 
 // تحقق من الحقول المطلوبة
-if (empty($user_id) || empty($product_id) || empty($cart_quantity) || ($cart_attributes === null || $cart_attributes === '' )) {
+if (empty($user_id) || empty($product_id) || empty($cart_quantity) || ($cart_attributes === null || $cart_attributes === '')) {
     echo json_encode(["status" => "fail", "message" => "Missing required fields"]);
     exit;
 }
@@ -88,10 +89,10 @@ if (!isset($con) || !($con instanceof PDO)) {
 }
 
 // إذا attributes مصفوفة، خزّنها كسلسلة JSON في العمود
-$cart_attributes_to_store = is_array($cart_attributes) ? json_encode($cart_attributes, JSON_UNESCAPED_UNICODE) : $cart_attributes;
+$cart_attributes_to_store = is_array($cart_attributes) ? json_encode($cart_attributes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $cart_attributes;
 
 // cart_tier كذلك (لو تريد تخزينها)
-$cart_tier_to_store = is_array($cart_tier) ? json_encode($cart_tier, JSON_UNESCAPED_UNICODE) : $cart_tier;
+$cart_tier_to_store = is_array($cart_tier) ? json_encode($cart_tier, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $cart_tier;
 
 try {
     // تحقق هل العنصر موجود بنفس user_id, product_id, attributes
@@ -118,7 +119,7 @@ try {
         $insertStmt = $con->prepare("INSERT INTO `cart`
             (`cart_user_id`, `cart_product_id`, `cart_product_title`, `cart_product_image`, `cart_price`, `cart_quantity`, `cart_attributes`, `cart_platform`, `cart_available_quantity`, `cart_tier`, `goods_sn`, `category_id`, `product_link`)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $insertStmt->execute([$user_id, $product_id, $product_title, $product_image, $product_price, $cart_quantity, $cart_attributes_to_store, $platform, $cart_available_quantity, $cart_tier_to_store, $goods_sn, $category_id , $product_link]);
+        $insertStmt->execute([$user_id, $product_id, $product_title, $product_image, $product_price, $cart_quantity, $cart_attributes_to_store, $platform, $cart_available_quantity, $cart_tier_to_store, $goods_sn, $category_id, $product_link]);
         if ($insertStmt->rowCount() > 0) {
             echo json_encode(["status" => "success", "message" => "add"]);
         } else {

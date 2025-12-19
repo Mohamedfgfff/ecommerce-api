@@ -70,8 +70,16 @@ if (!isset($con) || !($con instanceof PDO)) {
 }
 
 // 3. Prepare Attributes for Query
-// If attributes is an array, encode it to JSON string for database matching
-$attributes_for_query = is_array($attr_input) ? json_encode($attr_input, JSON_UNESCAPED_UNICODE) : $attr_input;
+// Normalize attributes: if it's a JSON string, decode it first.
+// Then re-encode it to ensure the JSON format matches exactly what was stored by cart_add.php.
+$attributes = $attr_input;
+if (is_string($attributes) && $attributes !== '') {
+    $decoded = json_decode($attributes, true);
+    if (json_last_error() === JSON_ERROR_NONE) {
+        $attributes = $decoded;
+    }
+}
+$attributes_for_query = is_array($attributes) ? json_encode($attributes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $attributes;
 
 try {
     /**
