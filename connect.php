@@ -3,7 +3,7 @@
 
 // اقرأ بيانات قاعدة البيانات من متغيرات البيئة (Railway) أو استخدم قيم افتراضية للتطوير المحلي
 $host = $_ENV['MYSQLHOST'] ?? 'localhost';
-$dbname = $_ENV['MYSQLDATABASE'] ?? 'railway'?? 'saltuk';
+$dbname = $_ENV['MYSQLDATABASE'] ?? 'railway' ?? 'saltuk';
 $username = $_ENV['MYSQLUSER'] ?? 'root';     // ✅ اسم المتغير: $username
 $password = $_ENV['MYSQLPASSWORD'] ?? '';     // ✅ اسم المتغير: $password
 
@@ -30,7 +30,6 @@ try {
     if (!isset($notAuth)) {
         // checkAuthenticate();
     }
-
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([

@@ -29,9 +29,25 @@ CREATE TABLE IF NOT EXISTS orders_services (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ";
 
+$table3 = "
+CREATE TABLE IF NOT EXISTS service_requests (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    service_id INT NOT NULL,
+    status ENUM('new', 'in_chat', 'price_quoted', 'approved', 'completed', 'cancelled') DEFAULT 'new',
+    quoted_price DECIMAL(10,2),
+    note TEXT,
+    address_id INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (service_id) REFERENCES local_services(service_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+";
+
 try {
     $con->exec($table1);
     $con->exec($table2);
+    $con->exec($table3);
     echo json_encode(array("status" => "success", "message" => "Tables created successfully"));
 } catch (PDOException $e) {
     echo json_encode(array("status" => "fail", "message" => $e->getMessage()));
