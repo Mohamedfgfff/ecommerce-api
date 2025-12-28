@@ -4,7 +4,7 @@ include "../../connect.php";
 $userid    = filterRequest("userid");
 $serviceid = filterRequest("serviceid");
 $note      = filterRequest("note");
-$price     = filterRequest("pricequoted");
+$price     = filterRequest("quoted_price");
 $addressid = filterRequest("addressid"); // New
 
 if ($price == null) {
