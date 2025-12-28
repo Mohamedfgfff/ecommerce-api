@@ -4,6 +4,7 @@ include "../../connect.php";
 $userid    = filterRequest("userid");
 $serviceid = filterRequest("serviceid");
 $note      = filterRequest("note");
+$price     = filterRequest("price_quoted");
 $addressid = filterRequest("addressid"); // New
 
 
@@ -12,5 +13,6 @@ insertData("service_requests", [
     "service_id" => $serviceid,
     "note" => $note,
     "address_id" => $addressid,
+    "quoted_price" => $price,
     "status" => "new"
 ]);
