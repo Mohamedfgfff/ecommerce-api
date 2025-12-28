@@ -6,6 +6,7 @@ $serviceid = filterRequest("serviceid");
 $note      = filterRequest("note");
 $price     = filterRequest("quoted_price");
 $addressid = filterRequest("addressid"); // New
+$status    = filterRequest("status");
 
 if ($price == null) {
     echo json_encode(array("status" => "fail", "message" => "Price is required"));
@@ -18,5 +19,5 @@ insertData("service_requests", [
     "note" => $note,
     "address_id" => $addressid,
     "quoted_price" => $price,
-    "status" => "new"
+    "status" => $status ?? "new"
 ]);
