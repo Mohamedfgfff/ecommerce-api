@@ -7,6 +7,10 @@ $note      = filterRequest("note");
 $price     = filterRequest("pricequoted");
 $addressid = filterRequest("addressid"); // New
 
+if ($price == null) {
+    echo json_encode(array("status" => "fail", "message" => "Price is required"));
+    exit;
+}
 
 insertData("service_requests", [
     "user_id" => $userid,
