@@ -8,6 +8,9 @@ function filterRequest($requestname)
     if (isset($_POST[$requestname])) {
         return htmlspecialchars(strip_tags($_POST[$requestname]));
     }
+    if (isset($_GET[$requestname])) {
+        return htmlspecialchars(strip_tags($_GET[$requestname]));
+    }
     return null;
 }
 function filterRequestSearch($requestname)
