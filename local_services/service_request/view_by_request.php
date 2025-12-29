@@ -36,7 +36,6 @@ if ($count > 0) {
             "note"         => $row['note'],
             "created_at"   => $row['created_at'],
             "user" => [
-                "id"    => $row['user_id'],
                 "name"  => $row['user_name'],
                 "email" => $row['user_email'],
                 "phone" => $row['user_phone'],
